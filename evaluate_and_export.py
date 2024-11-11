@@ -36,7 +36,7 @@ def evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev,num
     import datetime
     today = datetime.datetime.now().strftime("%Y_%m_%d")
     if fel_le_kerekit == 1:
-        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch:{train_batch_size}_acc-{val_accuracy:.2f}_le_{model_neve}_tLossMin-{round(t_loss_min, 2)}.csv'
+        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{val_accuracy:.2f}_le_{model_neve}_tLossMin-{round(t_loss_min, 2)}.csv'
     else:
         output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{val_accuracy:.2f}_fel_{model_neve}_tLossMin-{round(t_loss_min, 2)}.csv'
 

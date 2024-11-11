@@ -4,6 +4,16 @@ import torch.optim as optim
 from torchvision.models import mobilenet_v2
 from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
 
+
+
+#  DenseNet
+#  Xception --> nagyon pontos és komplex
+#  ResNet
+
+
+
+
+
 # MobileNetV2 inicializálása és testreszabása az osztályok számával
 class MobileNetV2Custom(nn.Module):
     def __init__(self, num_classes=1000):
@@ -16,4 +26,3 @@ class MobileNetV2Custom(nn.Module):
         return self.model(x)
 
 
-# RESNET34
