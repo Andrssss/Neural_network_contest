@@ -4,9 +4,9 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (50, 8, 1, "MobileNetV2Custom"),
-    (55, 8, 1, "MobileNetV2Custom"),
-    (50, 8, 0, "MobileNetV2Custom"),
+    (60, 8, 1, "MobileNetV2Custom"),
+    (70, 8, 1, "MobileNetV2Custom"),
+    (50, 16, 1, "MobileNetV2Custom")
 ]
 
 # num_epochs = 50
@@ -255,7 +255,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and
             fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
-        start_epoch = num_epochs  # Folytatás az aktuális num_epochs értéktől
+        start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
     else:
         t_loss_min = 99
         # Újrainicializáljuk az adatokat és a modellt
@@ -270,7 +270,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
-
+    print(f" [{start_epoch} - {num_epochs}],")
     # Epoch ciklus a megadott start_epoch-tól num_epochs-ig
     for epoch in range(start_epoch, num_epochs):
         model.train()
@@ -302,8 +302,9 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     print(f"Validation Accuracy: {val_accuracy:.4f}")
 
     # Modell értékelése és kiiratás
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,
-                   val_accuracy, fel_le_kerekit, model_neve, t_loss_min)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min)
+
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
