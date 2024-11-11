@@ -8,10 +8,10 @@ configurations = [
     (50, 8, 0, "MobileNetV2Custom"),
 ]
 
-# num_epochs = 1
+# num_epochs = 50
 # train_batch_size = 8
 # fel_le_kerekit = 1  # le=1 , fel=0... lefele magasabb pontot ad
-# model_neve = "MobileNetV2Custom" ---> ez logolás miatt kell
+# model_neve = "MobileNetV2Custom" ---> ez logoldás miatt kell
 
 
 
@@ -246,118 +246,55 @@ val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
 
 # Betanítás validációval
+import numpy as np
+import torch
+from torch import nn, optim
+from torch.utils.data import DataLoader
+
+previous_num_epochs = None
+
 for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
-    dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
-    train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
-
-    # Modell betöltése
-
-    num_classes = len(np.unique(data_array[:, 1]))
-    model = MobileNetV2Custom(num_classes=num_classes)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-
-    dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = model.to(dev)
-
-
-    # train_batch_size
     t_loss_min = 99
-    for epoch in range(num_epochs):
-        # Tréning szakasz
+
+    if previous_num_epochs is not None and num_epochs < previous_num_epochs:
+        start_epoch = num_epochs  # Folytatás az aktuális num_epochs értéktől
+    else:
+        # Újrainicializáljuk az adatokat és a modellt
+        dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
+        train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
+
+        num_classes = len(np.unique(data_array[:, 1]))
+        model = MobileNetV2Custom(num_classes=num_classes)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+        dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        model = model.to(dev)
+        start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
+
+    # Epoch ciklus a megadott start_epoch-tól num_epochs-ig
+    for epoch in range(start_epoch, num_epochs):
         model.train()
         train_loss = 0.0
         for train_images, labels in train_loader:
             train_images, labels = train_images.to(dev), labels.to(dev).long()
-
             optimizer.zero_grad()
             outputs = model(train_images)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-
             train_loss += loss.item()
+
         train_loss /= len(train_loader)
-
-        """
-        # Validáció szakasz
-        model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for img_id in train_image_ids:
-                img_idx = train_image_ids.index(img_id)
-                img = train_image_tensors[img_idx].unsqueeze(0).to(dev)
-                label = data_array[data_array[:, 0] == img_id, 1][0]  # helyes címke
-
-                outputs = model(img)
-                _, predicted = torch.max(outputs, 1)
-                if predicted.item() == label:
-                    correct += 1
-                total += 1
-
-        val_accuracy = correct / total
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
-        scheduler.step()
-        """
-        if train_loss < t_loss_min : t_loss_min = train_loss
+        if train_loss < t_loss_min:
+            t_loss_min = train_loss
         print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
         scheduler.step()
 
-
-
-
-
-
-
-
-
-    # --------------------------------------   LOGOLÁS  --------------------------------------------------------------------
-    # ----------------------------------------------------------------------------------------------------------------------
-    # ----------------------------------------------------------------------------------------------------------------------
-    # Evaluate on the validation set and count matching predicted vs. actual IDs
-    def evaluate_on_val_set(model, val_loader, device, label_map):
-        model.eval()  # Set model to evaluation mode
-        reverse_label_map = {idx: label for label, idx in label_map.items()}  # Reverse label mapping for interpretation
-
-        correct_count = 0  # Count of correct predictions
-        total_count = 0  # Total number of validation samples
-        results = []  # To store test_ids and predicted labels for analysis
-
-        with torch.no_grad():  # No need to calculate gradients during evaluation
-            for images, labels, ids in val_loader:  # Loop through validation loader
-                images = images.to(device)
-
-                # Model predictions
-                outputs = model(images)
-                _, predicted = torch.max(outputs, 1)  # Get the index of the max log-probability
-
-                # Interpret and format the predictions
-                for i, prediction in enumerate(predicted):
-                    predicted_label = reverse_label_map[prediction.item()]  # Map index to actual label
-                    predicted_label = int(predicted_label)  # Ensure integer format
-
-                    # Append results for analysis
-                    results.append([ids[i], predicted_label])
-
-                    # Check if the predicted label matches the actual label (ID)
-                    if predicted_label == ids[i]:
-                        correct_count += 1
-                    total_count += 1
-
-        # Calculate accuracy
-        accuracy = correct_count / total_count if total_count > 0 else 0.0
-        print(f"Validation Accuracy: {accuracy:.4f}")
-
-        return results, accuracy  # Returns results list and validation accuracy
-
-    # results, val_accuracy = evaluate_on_val_set(model, val_loader, dev, label_map)
-    val_accuracy = 0.0
+    # Loggolás, mentés és egyéb műveletek
+    val_accuracy = 0.0  # Validációs pontosság kezdeti érték
     output_file = 'log.csv'
-
     file_exists = os.path.isfile(output_file)
-    # Eredmények mentése CSV fájlba
     with open(output_file, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
@@ -365,11 +302,9 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         writer.writerow([num_epochs, train_batch_size, val_accuracy])
     print(f"Validation Accuracy: {val_accuracy:.4f}")
 
+    # Modell értékelése és kiiratás
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,
+                   val_accuracy, fel_le_kerekit, model_neve, t_loss_min)
 
-
-
-
-    # --------------------------------------   KIIRATAS  -------------------------------------------------------------------
-    # ----------------------------------------------------------------------------------------------------------------------
-    # ----------------------------------------------------------------------------------------------------------------------
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev,num_epochs,train_batch_size,val_accuracy,fel_le_kerekit,model_neve,t_loss_min)
+    # Előző epoch értékének frissítése
+    previous_num_epochs = num_epochs
