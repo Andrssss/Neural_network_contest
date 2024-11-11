@@ -6,3 +6,4 @@ Epochs,Batch_size,Percent
 1,16,-1
 50,8,0.0
 1,8,0.0
+50,8,0.0
