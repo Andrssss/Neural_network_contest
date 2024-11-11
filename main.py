@@ -1,6 +1,7 @@
 
 # ITT lehet változtatni, hogy milyen konfigurációkkal fusson le egymás után.
 # Ez azért sexy, mert teljesen autómata, mind a log, mind a file létrehozása a result mappába.
+# Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
     (50, 8, 1, "MobileNetV2Custom"),
@@ -207,9 +208,6 @@ print("Átalakított címke:", data_array[:, 1])
 # --------------------------------------   BETANITAS  ------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
-
-
-
 # Egyedi dataset osztály
 class CustomImageDataset(Dataset):
     def __init__(self, images, image_ids, data_array, transform=None):
@@ -251,14 +249,15 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
-previous_num_epochs = None
+previous_config = None
 
 for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
-    t_loss_min = 99
 
-    if previous_num_epochs is not None and num_epochs < previous_num_epochs:
+    if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and
+            fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = num_epochs  # Folytatás az aktuális num_epochs értéktől
     else:
+        t_loss_min = 99
         # Újrainicializáljuk az adatokat és a modellt
         dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
         train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
@@ -307,4 +306,5 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                    val_accuracy, fel_le_kerekit, model_neve, t_loss_min)
 
     # Előző epoch értékének frissítése
-    previous_num_epochs = num_epochs
+    previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
+
