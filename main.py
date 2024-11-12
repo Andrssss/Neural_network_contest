@@ -33,6 +33,14 @@ configurations = [
 # fel_le_kerekit = 1  # le=1 , fel=0... lefele magasabb pontot ad
 # model_neve = "MobileNetV2Custom" ---> ez logoldás miatt kell
 
+#MobileNetV2Custom - ResNet34Custom - "EfficientNetB0Custom"
+model_name = "ResNet34Custom"
+
+
+
+
+
+
 validation_ratio = 0.1
 # 0.0 -> nincs validáció
 # 0.1 -> 10%
@@ -330,7 +338,15 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
         num_classes = len(np.unique(data_array[:, 1]))
-        model = MobileNetV2Custom(num_classes=num_classes)
+
+        if model_name == "EfficientNetB0Custom":
+            model = MobileNetV2Custom(num_classes=num_classes)
+        elif model_name == "MobilNetV2Custom":
+            model = MobileNetV2Custom(num_classes=num_classes)
+        elif model_name == "ResNet34Custom":
+            model = ResNet34Custom(num_classes=num_classes)
+
+        #model = MobileNetV2Custom(num_classes=num_classes)#-------------------------------------------
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
