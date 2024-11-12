@@ -34,7 +34,7 @@ configurations = [
 # model_neve = "MobileNetV2Custom" ---> ez logoldás miatt kell
 
 #MobileNetV2Custom - ResNet34Custom - "EfficientNetB0Custom"
-model_name = "ResNet34Custom"
+
 
 
 
@@ -339,12 +339,15 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
         num_classes = len(np.unique(data_array[:, 1]))
 
-        if model_name == "EfficientNetB0Custom":
+        if model_neve == "EfficientNetB0Custom":
+            model = EfficientNetB0Custom(num_classes=num_classes)
+        elif model_neve == "MobileNetV2Custom":
             model = MobileNetV2Custom(num_classes=num_classes)
-        elif model_name == "MobilNetV2Custom":
-            model = MobileNetV2Custom(num_classes=num_classes)
-        elif model_name == "ResNet34Custom":
+        elif model_neve == "ResNet34Custom":
             model = ResNet34Custom(num_classes=num_classes)
+        else:
+            raise ValueError("Hibás/nem létező modell név: " + model_neve)
+
 
         #model = MobileNetV2Custom(num_classes=num_classes)#-------------------------------------------
         criterion = nn.CrossEntropyLoss()
