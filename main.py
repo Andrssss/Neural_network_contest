@@ -24,6 +24,8 @@ configurations = [
     (85, 8, 1, "MobileNetV2Custom"),
     (90, 8, 1, "MobileNetV2Custom"),
     (95, 8, 1, "MobileNetV2Custom"),
+    (50, 8, 1, "ResNet34Custom"),
+    (50, 8, 1, "EfficientNetB0Custom")
 ]
 
 # num_epochs = 50
@@ -51,7 +53,7 @@ import csv
 from torch.utils.data import Dataset, DataLoader
 from skimage.transform import resize
 from torchvision import transforms
-from model import MobileNetV2Custom
+from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom
 from evaluate_and_export import evaluate_model
 
 
