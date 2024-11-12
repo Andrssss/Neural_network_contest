@@ -4,16 +4,10 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (40, 16, 1, "MobileNetV2Custom"),
-    (45, 16, 1, "MobileNetV2Custom"),
-    (50, 16, 1, "MobileNetV2Custom"),
-    (55, 16, 1, "MobileNetV2Custom"),
-    (60, 16, 1, "MobileNetV2Custom"),
-    (65, 16, 1, "MobileNetV2Custom"),
-    (40, 32, 1, "MobileNetV2Custom"),
-    (45, 32, 1, "MobileNetV2Custom"),
-    (50, 32, 1, "MobileNetV2Custom"),
-    (55, 32, 1, "MobileNetV2Custom"),
+    (20, 16, 1, "MobileNetV2Custom"),
+    (25, 16, 1, "MobileNetV2Custom"),
+    (30, 16, 1, "MobileNetV2Custom"),
+    (35, 16, 1, "MobileNetV2Custom")
 ]
 
 # num_epochs = 50
