@@ -4,10 +4,26 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (20, 16, 1, "MobileNetV2Custom"),
     (25, 16, 1, "MobileNetV2Custom"),
     (30, 16, 1, "MobileNetV2Custom"),
-    (35, 16, 1, "MobileNetV2Custom")
+    (35, 16, 1, "MobileNetV2Custom"),
+    (40, 16, 1, "MobileNetV2Custom"),
+    (45, 16, 1, "MobileNetV2Custom"),
+    (50, 16, 1, "MobileNetV2Custom"),
+    (55, 16, 1, "MobileNetV2Custom"),
+    (60, 16, 1, "MobileNetV2Custom"),
+    (65, 16, 1, "MobileNetV2Custom"),
+    (70, 16, 1, "MobileNetV2Custom"),
+    (50, 8, 1, "MobileNetV2Custom"),
+    (55, 8, 1, "MobileNetV2Custom"),
+    (60, 8, 1, "MobileNetV2Custom"),
+    (65, 8, 1, "MobileNetV2Custom"),
+    (70, 8, 1, "MobileNetV2Custom"),
+    (75, 8, 1, "MobileNetV2Custom"),
+    (80, 8, 1, "MobileNetV2Custom"),
+    (85, 8, 1, "MobileNetV2Custom"),
+    (90, 8, 1, "MobileNetV2Custom"),
+    (95, 8, 1, "MobileNetV2Custom"),
 ]
 
 # num_epochs = 50
@@ -15,7 +31,9 @@ configurations = [
 # fel_le_kerekit = 1  # le=1 , fel=0... lefele magasabb pontot ad
 # model_neve = "MobileNetV2Custom" ---> ez logoldás miatt kell
 
-
+validation_ratio = 0.1
+# 0.0 -> nincs validáció
+# 0.1 -> 10%
 
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -99,8 +117,28 @@ for test_id_part, test_type_part in test_data_dict.items():
         test_image_list.append(image_stack)
         test_image_ids.append(test_id_part)
 
+
+
+
+
+from sklearn.model_selection import train_test_split
+import torch
+from torchvision import transforms
+# Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
+
+if validation_ratio > 0.0:
+    train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split(
+        train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
+else:
+    # If no validation set is desired, keep all data in training set
+    validate_image_list = []
+    validate_image_ids = []
+
+
 test_images = np.array(test_image_list)
 train_images = np.array(train_image_list)
+validate_images = np.array(validate_image_list) if validate_image_list else None
+
 
 
 # Számláló a törölt elemekhez ---> KITÖRLI AMIBEN NINCS : phase + amp + mask  !!!!!!!!!!!!!!!!!
@@ -136,7 +174,8 @@ train_mean = train_images.mean()
 train_std = train_images.std()
 test_mean = test_images.mean()
 test_std = test_images.std()
-
+validate_mean = validate_images.mean() if validate_images is not None else train_mean
+validate_std = validate_images.std() if validate_images is not None else train_std
 
 
 
@@ -147,6 +186,12 @@ transform_train = transforms.Compose([
 transform_test = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[test_mean], std=[test_std])   ])
+transform_validate = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[validate_mean], std=[validate_std])  ])
+
+
+
 
 train_image_tensors = []
 for img in train_images:
@@ -161,6 +206,15 @@ for img in test_images:
     test_image_tensors.append(transformed_img)
 test_image_tensors = torch.stack(test_image_tensors)
 print(f"test_image_tensors : {test_image_tensors.shape}")  # [db, type, x, y]
+
+if validate_images is not None:
+    validate_image_tensors = []
+    for img in validate_images:
+        transformed_img = transform_validate(img)
+        validate_image_tensors.append(transformed_img)
+    validate_image_tensors = torch.stack(validate_image_tensors)
+    print(f"validate_image_tensors : {validate_image_tensors.shape}")  # [count, channels, x, y]
+
 
 
 # EXCEL BEOLVASÁS --------------------------------------------------------------
@@ -251,17 +305,27 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 previous_config = None
+t_loss_min = 99
+max_acc = 0
+val_accuracy = 0.0
+
 
 for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
-    if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and
-            fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
+    if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
     else:
         t_loss_min = 99
+        max_acc = 0
+        val_accuracy = 0.0
         # Újrainicializáljuk az adatokat és a modellt
         dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
         train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
+
+        # Validation dataset (if available)
+        if validate_image_tensors is not None:
+            val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array=data_array)
+            val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
         num_classes = len(np.unique(data_array[:, 1]))
         model = MobileNetV2Custom(num_classes=num_classes)
@@ -288,23 +352,61 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         train_loss /= len(train_loader)
         if train_loss < t_loss_min:
             t_loss_min = train_loss
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
         scheduler.step()
 
+        # Validation evaluation
+        # Validation evaluation
+        if validate_image_tensors is not None:
+            model.eval()  # Váltás kiértékelési módba
+
+            results = []
+            reverse_label_map = {idx: label for label, idx in label_map.items()}  # Címkék visszafejtése
+            correct_count = 0  # Egyezések számlálása
+            total_count = 0  # Összes validációs adat száma
+
+            with torch.no_grad():  # Gradiensek nem szükségesek kiértékelés során
+                for test_images, test_ids in zip(validate_image_tensors, validate_image_ids):
+                    test_images = test_images.unsqueeze(0).to(dev)
+
+                    outputs = model(test_images)
+                    _, predicted = torch.max(outputs, 1)
+
+                    predicted_label = reverse_label_map[predicted.item()]
+                    predicted_label = int(abs(float(predicted_label)))
+
+                    # Az eredeti címke kinyerése az ID alapján
+                    original_label = reverse_label_map[data_array[data_array[:, 0] == test_ids, 1].item()]
+                    original_label = int(abs(float(original_label)))
+
+                    # Összehasonlítás és számlálás
+                    #print(f"Predictions: {predicted_label} / Original: {original_label}")
+                    if predicted_label == original_label:
+                        correct_count += 1
+                    total_count += 1
+
+                    results.append([test_ids, predicted_label, original_label])
+
+            # Pontosság kiszámítása
+            # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
+            val_accuracy = correct_count / total_count
+            print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
+        else:
+            print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
+
+        if max_acc < val_accuracy: max_acc = val_accuracy
+
     # Loggolás, mentés és egyéb műveletek
-    val_accuracy = 0.0  # Validációs pontosság kezdeti érték
     output_file = 'log.csv'
     file_exists = os.path.isfile(output_file)
     with open(output_file, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
-            writer.writerow(['Epochs', 'Batch_size', 'Percent'])
-        writer.writerow([num_epochs, train_batch_size, val_accuracy])
-    print(f"Validation Accuracy: {val_accuracy:.4f}")
+            writer.writerow(['Model Name', 'Epochs', 'Batch Size', 'Validation Accuracy'])  # Fejléc
+        writer.writerow([model_neve, num_epochs, train_batch_size, val_accuracy])  # Modell név is bekerül
 
     # Modell értékelése és kiiratás
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min)
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,max_acc)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,max_acc)
 
 
     # Előző epoch értékének frissítése

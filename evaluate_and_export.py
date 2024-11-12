@@ -3,7 +3,7 @@ import torch
 
 
 
-def evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev,num_epochs,train_batch_size,val_accuracy,fel_le_kerekit,model_neve,t_loss_min):
+def evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev,num_epochs,train_batch_size,val_accuracy,fel_le_kerekit,model_neve,t_loss_min,max_acc):
     model.eval()  # Váltás kiértékelési módba
 
     results = []
@@ -25,20 +25,12 @@ def evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev,num
             results.append([test_ids, predicted_label])
 
 
-    #    with open(output_file, mode='w', newline='') as file:
-    #        writer = csv.writer(file)
-    #        writer.writerow(['Id', 'Expected'])
-    #        writer.writerows(results)
-
-
-
-
     import datetime
     today = datetime.datetime.now().strftime("%Y_%m_%d")
     if fel_le_kerekit == 1:
-        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{round(val_accuracy, 4):.2f}_le_{model_neve}_tLossMin-{round(t_loss_min, 4)}.csv'
+        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{round(max_acc, 4):.2f}_le_{model_neve}_tLossMin-{round(t_loss_min, 4)}.csv'
     else:
-        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{round(val_accuracy, 4):.2f}_fel_{model_neve}_tLossMin-{round(t_loss_min, 4)}.csv'
+        output_file = f'results/{today}_solution_epoch-{num_epochs}_batch-{train_batch_size}_acc-{round(max_acc, 4):.2f}_fel_{model_neve}_tLossMin-{round(t_loss_min, 4)}.csv'
 
 
     with open(output_file, mode='w', newline='') as file:
