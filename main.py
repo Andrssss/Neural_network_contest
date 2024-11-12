@@ -4,35 +4,27 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (55, 8, 1, "MobileNetV2Custom"),
-    (60, 8, 1, "MobileNetV2Custom"),
-    (65, 8, 1, "MobileNetV2Custom"),
-    (70, 8, 1, "MobileNetV2Custom"),
-    (75, 8, 1, "MobileNetV2Custom"),
-    (80, 8, 1, "MobileNetV2Custom"),
-    (85, 8, 1, "MobileNetV2Custom"),
-    (90, 8, 1, "MobileNetV2Custom"),
-    (95, 8, 1, "MobileNetV2Custom"),
-    (50, 8, 1, "ResNet34Custom"),
-    (55, 8, 1, "ResNet34Custom"),
-    (60, 8, 1, "ResNet34Custom"),
-    (65, 8, 1, "ResNet34Custom"),
-    (70, 8, 1, "ResNet34Custom"),
-    (75, 8, 1, "ResNet34Custom"),
-    (80, 8, 1, "ResNet34Custom"),
-    (85, 8, 1, "ResNet34Custom"),
-    (90, 8, 1, "ResNet34Custom"),
-    (95, 8, 1, "ResNet34Custom"),
-    (50, 8, 1, "EfficientNetB0Custom"),
-    (55, 8, 1, "EfficientNetB0Custom"),
-    (60, 8, 1, "EfficientNetB0Custom"),
-    (65, 8, 1, "EfficientNetB0Custom"),
-    (70, 8, 1, "EfficientNetB0Custom"),
-    (75, 8, 1, "EfficientNetB0Custom"),
-    (80, 8, 1, "EfficientNetB0Custom"),
-    (85, 8, 1, "EfficientNetB0Custom"),
-    (90, 8, 1, "EfficientNetB0Custom"),
-    (95, 8, 1, "EfficientNetB0Custom"),
+    (50, 8, 1, "SwinTransformerCustom"),
+    (55, 8, 1, "SwinTransformerCustom"),
+    (60, 8, 1, "SwinTransformerCustom"),
+    (65, 8, 1, "SwinTransformerCustom"),
+    (70, 8, 1, "SwinTransformerCustom"),
+    (75, 8, 1, "SwinTransformerCustom"),
+    (80, 8, 1, "SwinTransformerCustom"),
+    (85, 8, 1, "SwinTransformerCustom"),
+    (90, 8, 1, "SwinTransformerCustom"),
+    (95, 8, 1, "SwinTransformerCustom"),
+
+    (50, 8, 1, "ConvNeXtCustom"),
+    (55, 8, 1, "ConvNeXtCustom"),
+    (60, 8, 1, "ConvNeXtCustom"),
+    (65, 8, 1, "ConvNeXtCustom"),
+    (70, 8, 1, "ConvNeXtCustom"),
+    (75, 8, 1, "ConvNeXtCustom"),
+    (80, 8, 1, "ConvNeXtCustom"),
+    (85, 8, 1, "ConvNeXtCustom"),
+    (90, 8, 1, "ConvNeXtCustom"),
+    (95, 8, 1, "ConvNeXtCustom"),
 ]
 
 validation_ratio = 0.1
@@ -45,8 +37,11 @@ validation_ratio = 0.1
 # fel_le_kerekit = 1     # ennek most nincs funkciója, butaság
 # model_neve = "MobileNetV2Custom"
 
-#MobileNetV2Custom - ResNet34Custom - "EfficientNetB0Custom"
-
+# MobileNetV2Custom -
+# ResNet34Custom -
+# EfficientNetB0Custom - kurva lassú betanulás
+# SwinTransformerCustom -
+# ConvNeXtCustom -
 
 
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
@@ -59,13 +54,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.image as mpimg
 import glob
-import os
 import csv
 import os
-import sys
 import io
+import logging
+import sys
+import codecs
 
-
+from datetime import datetime
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
@@ -74,15 +70,10 @@ from datetime import datetime
 from torch.utils.data import Dataset, DataLoader
 from skimage.transform import resize
 from torchvision import transforms
-from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom
+from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
 from evaluate_and_export import evaluate_model
 
 
-import logging
-import sys
-import codecs
-import numpy as np
-from datetime import datetime
 
 # UTF-8 kimenet biztosítása konzolhoz
 class Utf8StreamHandler(logging.StreamHandler):
@@ -374,18 +365,41 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
         if model_neve == "EfficientNetB0Custom":
             model = EfficientNetB0Custom(num_classes=num_classes)
+            optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
+            criterion = nn.MSELoss()  # Regresszióhoz megfelelő
+
         elif model_neve == "MobileNetV2Custom":
             model = MobileNetV2Custom(num_classes=num_classes)
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+            criterion = nn.MSELoss()
+
         elif model_neve == "ResNet34Custom":
             model = ResNet34Custom(num_classes=num_classes)
-        else:
-            raise ValueError(f"Hibás/nem létező modell név: {model_neve}" )
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+            criterion = nn.MSELoss()
 
+        elif model_neve == "SwinTransformerCustom":
+            model = SwinTransformerCustom(num_classes=num_classes)
+            optimizer = optim.AdamW(model.parameters(), lr=0.0005)  # AdamW optimizer
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10,
+                                                             eta_min=1e-6)  # Speciális LR csökkentés
+            criterion = nn.MSELoss()
+
+        elif model_neve == "ConvNeXtCustom":
+            model = ConvNeXtCustom(num_classes=num_classes)
+            optimizer = optim.AdamW(model.parameters(), lr=0.0005)
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
+            criterion = nn.MSELoss()
+
+        else:
+            raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
 
         #model = MobileNetV2Custom(num_classes=num_classes)#-------------------------------------------
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+        # criterion = nn.CrossEntropyLoss()
+        # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
