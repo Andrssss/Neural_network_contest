@@ -85,6 +85,6 @@ def initialize_data(validation_ratio=0.1, seed=1234):
     deleted_count_test = len(test_data_dict) - len(test_image_ids)
 
     logging.info(f"Torolt elemek szama a train-ben: {deleted_count_train}  , Maradt : {len(train_image_ids)}")
-    logging.info(f"Torolt elemek szama a test-ben: {deleted_count_test}    , Maradt : {len(test_image_ids)}")
+    logging.info(f"Torolt elemek szama a test-ben:  {deleted_count_test}   , Maradt : {len(test_image_ids)}")
 
     return train_image_list, train_image_ids, test_image_list, test_image_ids, data_array

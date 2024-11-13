@@ -4,7 +4,6 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-
     (20, 64, 1, "ConvNeXtCustom"),
     (25, 64, 1, "ConvNeXtCustom"),
     (30, 64, 1, "ConvNeXtCustom"),
@@ -21,13 +20,25 @@ configurations = [
     (45, 32, 1, "ConvNeXtCustom"),
     (50, 32, 1, "ConvNeXtCustom"),
 
+    (20, 8, 1, "ConvNeXtCustom"),
+    (25, 8, 1, "ConvNeXtCustom"),
+    (30, 8, 1, "ConvNeXtCustom"),
+    (35, 8, 1, "ConvNeXtCustom"),
+    (40, 8, 1, "ConvNeXtCustom"),
+    (45, 8, 1, "ConvNeXtCustom"),
+    (50, 8, 1, "ConvNeXtCustom"),
+
+    (20, 16, 1, "ConvNeXtCustom"),
+    (25, 16, 1, "ConvNeXtCustom"),
+    (30, 16, 1, "ConvNeXtCustom"),
+    (35, 16, 1, "ConvNeXtCustom"),
+    (40, 16, 1, "ConvNeXtCustom"),
+    (45, 16, 1, "ConvNeXtCustom"),
+    (50, 16, 1, "ConvNeXtCustom"),
+
 ]
 
-validation_ratio = 0.0
-# 0.0 -> nincs validáció
-# 0.1 -> 10%
-
-
+validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
 # num_epochs = 50
 # train_batch_size = 8
 # fel_le_kerekit = 1     # ennek most nincs funkciója, butaság
@@ -39,7 +50,6 @@ validation_ratio = 0.0
 # SwinTransformerCustom - picsog ?
 # ConvNeXtCustom        - kurva lassú betanulás ( laptopomon esélytelen ) --> ez lehet, hogy arany
 
-
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -48,43 +58,27 @@ import numpy as np
 import csv
 import os
 import logging
-
-
 from torch import nn, optim
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
 from evaluate_and_export import evaluate_model
-
-
 # Logger létrehozás -------------------------------------
 from logger import setup_logger
 setup_logger()
-
-
 # Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
 train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data()
 
 
 
-
-
-
-
-
-
-
-
-
 # Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
-if validation_ratio > 0.1:
+if validation_ratio > 0.01:
     train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split( train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
 else:
     validate_image_list = []
     validate_image_ids = []
-
 
 test_images = np.array(test_image_list)
 train_images = np.array(train_image_list)
@@ -360,7 +354,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         with open(output_file, mode='a') as file:
             file.write('\n')
 
-    logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve} - B = {train_batch_size}")
+    logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve} - B={train_batch_size}")
     # Epoch ciklus a megadott start_epoch-tól num_epochs-ig
     for epoch in range(start_epoch, num_epochs):
         model.train()
