@@ -4,14 +4,18 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (40, 8, 1, "MobileNetV2Custom"),
-    (45, 8, 1, "MobileNetV2Custom"),
-    (50, 8, 1, "MobileNetV2Custom"),
-    (55, 8, 1, "MobileNetV2Custom"),
-    (60, 8, 1, "MobileNetV2Custom"),
-    (65, 8, 1, "MobileNetV2Custom"),
-    (70, 8, 1, "MobileNetV2Custom"),
-    (75, 8, 1, "MobileNetV2Custom"),
+    (40, 16, 1, "MobileNetV2Custom"),
+    (45, 16, 1, "MobileNetV2Custom"),
+    (50, 16, 1, "MobileNetV2Custom"),
+    (55, 16, 1, "MobileNetV2Custom"),
+    (60, 16, 1, "MobileNetV2Custom"),
+    (65, 16, 1, "MobileNetV2Custom"),
+    (70, 16, 1, "MobileNetV2Custom"),
+    (75, 16, 1, "MobileNetV2Custom"),
+    (80, 16, 1, "MobileNetV2Custom"),
+    (85, 16, 1, "MobileNetV2Custom"),
+    (90, 16, 1, "MobileNetV2Custom"),
+    (95, 16, 1, "MobileNetV2Custom"),
 ]
 
 validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
@@ -259,7 +263,7 @@ val_accuracy = 0.0
 
 
 for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
-
+    cur_acc = 0.0
     if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
     else:
@@ -401,7 +405,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                 f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
         else:
             logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
-
+        if cur_acc < val_accuracy: cur_acc = val_accuracy
         if max_acc < val_accuracy: max_acc = val_accuracy
 
     # Loggolás, mentés és egyéb műveletek
@@ -411,11 +415,11 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         writer = csv.writer(file)
         if not file_exists:
             writer.writerow(['Model Name', 'Epochs', 'Batch Size', 'Validation Accuracy'])  # Fejléc
-        writer.writerow([model_neve, num_epochs, train_batch_size, max_acc])  # Modell név is bekerül
+        writer.writerow([model_neve, num_epochs, train_batch_size, cur_acc])  # Modell név is bekerül
 
     # Modell értékelése és kiiratás
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,max_acc)
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,max_acc)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,cur_acc)
+    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
 
 
     # Előző epoch értékének frissítése

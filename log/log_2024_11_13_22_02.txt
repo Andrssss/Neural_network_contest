@@ -1,0 +1,36 @@
+Validation_ratio : 0.05
+data_array.shape : (1191, 2)
+Torolt elemek szama a train-ben: 0  , Maradt : 1191
+Torolt elemek szama a test-ben:  0   , Maradt : 130
+train_image_tensors : torch.Size([1131, 3, 128, 128])
+test_image_tensors : torch.Size([130, 3, 128, 128])
+validate_image_tensors : torch.Size([60, 3, 128, 128])
+Eredeti címke: [1.957815391 -9.985237259 7.492938751 ... -1.135871743 -4.206591786
+ -8.879345336]
+Átalakított címke: [722 0 1048 ... 547 366 62]
+ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)
+ optimizer = optim.Adam(model.parameters(), lr=0.001)
+ [0 - 40] - MobileNetV2Custom - B=8
+Epoch [1/40], Train Loss: 7.1590, Val Accuracy: 0.1500
+Epoch [2/40], Train Loss: 7.0989, Val Accuracy: 0.1000
+Epoch [3/40], Train Loss: 7.0229, Val Accuracy: 0.1167
+Epoch [4/40], Train Loss: 6.7944, Val Accuracy: 0.1333
+Epoch [5/40], Train Loss: 6.4252, Val Accuracy: 0.1167
+Epoch [6/40], Train Loss: 5.9067, Val Accuracy: 0.1500
+Epoch [7/40], Train Loss: 5.4187, Val Accuracy: 0.1000
+Epoch [8/40], Train Loss: 4.7751, Val Accuracy: 0.1833
+Epoch [9/40], Train Loss: 3.9789, Val Accuracy: 0.1500
+Epoch [10/40], Train Loss: 3.1392, Val Accuracy: 0.1667
+Epoch [11/40], Train Loss: 2.3395, Val Accuracy: 0.2000
+Epoch [12/40], Train Loss: 1.7141, Val Accuracy: 0.2000
+Epoch [13/40], Train Loss: 1.1503, Val Accuracy: 0.2000
+Epoch [14/40], Train Loss: 0.7467, Val Accuracy: 0.1833
+Epoch [15/40], Train Loss: 0.4814, Val Accuracy: 0.1333
+Epoch [16/40], Train Loss: 0.3292, Val Accuracy: 0.2000
+Epoch [17/40], Train Loss: 0.2676, Val Accuracy: 0.1833
+Epoch [18/40], Train Loss: 0.1967, Val Accuracy: 0.1833
+Epoch [19/40], Train Loss: 0.1825, Val Accuracy: 0.2000
+Epoch [20/40], Train Loss: 0.1356, Val Accuracy: 0.1667
+Epoch [21/40], Train Loss: 0.0777, Val Accuracy: 0.1833
+Epoch [22/40], Train Loss: 0.0514, Val Accuracy: 0.1833
+Epoch [23/40], Train Loss: 0.0438, Val Accuracy: 0.1167
