@@ -4,37 +4,14 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (20, 128, 1, "ConvNeXtCustom"),
-    (25, 128, 1, "ConvNeXtCustom"),
-    (30, 128, 1, "ConvNeXtCustom"),
-    (35, 128, 1, "ConvNeXtCustom"),
-    (40, 128, 1, "ConvNeXtCustom"),
-    (45, 128, 1, "ConvNeXtCustom"),
-    (50, 128, 1, "ConvNeXtCustom"),
-
-    (20, 256, 1, "ConvNeXtCustom"),
-    (25, 256, 1, "ConvNeXtCustom"),
-    (30, 256, 1, "ConvNeXtCustom"),
-    (35, 256, 1, "ConvNeXtCustom"),
-    (40, 256, 1, "ConvNeXtCustom"),
-    (45, 256, 1, "ConvNeXtCustom"),
-    (50, 256, 1, "ConvNeXtCustom"),
-
-    (20, 8, 1, "ConvNeXtCustom"),
-    (25, 8, 1, "ConvNeXtCustom"),
-    (30, 8, 1, "ConvNeXtCustom"),
-    (35, 8, 1, "ConvNeXtCustom"),
-    (40, 8, 1, "ConvNeXtCustom"),
-    (45, 8, 1, "ConvNeXtCustom"),
-    (50, 8, 1, "ConvNeXtCustom"),
-
-    (20, 16, 1, "ConvNeXtCustom"),
-    (25, 16, 1, "ConvNeXtCustom"),
-    (30, 16, 1, "ConvNeXtCustom"),
-    (35, 16, 1, "ConvNeXtCustom"),
-    (40, 16, 1, "ConvNeXtCustom"),
-    (45, 16, 1, "ConvNeXtCustom"),
-    (50, 16, 1, "ConvNeXtCustom"),
+    (40, 8, 1, "MobileNetV2Custom"),
+    (45, 8, 1, "MobileNetV2Custom"),
+    (50, 8, 1, "MobileNetV2Custom"),
+    (55, 8, 1, "MobileNetV2Custom"),
+    (60, 8, 1, "MobileNetV2Custom"),
+    (65, 8, 1, "MobileNetV2Custom"),
+    (70, 8, 1, "MobileNetV2Custom"),
+    (75, 8, 1, "MobileNetV2Custom"),
 ]
 
 validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
@@ -317,10 +294,12 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             model = MobileNetV2Custom(num_classes=len(label_map))  # vagy az adott modellnek megfelelő
             optimizer = optim.Adam(model.parameters(), lr=0.001)
             # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # StepLR: 10 epochonként 0.1-es faktorral csökkenti a tanulási rátát.
-            # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50) # CosineAnnealingLR: Ha 20–50 epocra tervezel, a cosine annealing finoman csökkenti a tanulási rátát.
-            # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min') # ReduceLROnPlateau: Ha validation loss alapján szeretnéd csökkenteni a tanulási rátát
+            #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # StepLR: 10 epochonként 0.1-es faktorral csökkenti a tanulási rátát. -> may 20%
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50) # CosineAnnealingLR: Ha 20–50 epocra tervezel, a cosine annealing finoman csökkenti a tanulási rátát.
             criterion = nn.CrossEntropyLoss()
+
+            logging.info(f" scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)")
+            logging.info(f" optimizer = optim.Adam(model.parameters(), lr=0.001)")
 
         elif model_neve == "ResNet34Custom":
             model = ResNet34Custom(num_classes=num_classes)
@@ -441,7 +420,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-
 
 
 

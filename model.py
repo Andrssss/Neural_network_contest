@@ -7,20 +7,27 @@ from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
 from torchvision.models import resnet34, ResNet34_Weights
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 from timm import create_model
+from torchvision import models
+from torchvision.models import MobileNet_V2_Weights
+import torchvision.models as models
+
+import torch.nn as nn
+from torchvision import models
+from torchvision.models import MobileNet_V2_Weights
 
 
-
-
-# MobileNetV2 inicializálása és testreszabása az osztályok számával
 class MobileNetV2Custom(nn.Module):
-    def __init__(self, num_classes=21):
+    def __init__(self, num_classes):
         super(MobileNetV2Custom, self).__init__()
-        #self.model = mobilenet_v2(pretrained=True)  # Betölt egy előre betanított MobileNetV2 modellt
-        self.model = mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-        self.model.classifier[1] = nn.Linear(self.model.last_channel, num_classes)  # Kimeneti réteg módosítása
+
+        # MobileNetV2 inicializálása előre betanított súlyokkal
+        self.mobilenet = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
+
+        # Utolsó osztályozó réteg lecserélése az osztályok számára
+        self.mobilenet.classifier[1] = nn.Linear(self.mobilenet.last_channel, num_classes)
 
     def forward(self, x):
-        return self.model(x)
+        return self.mobilenet(x)
 
 # ResNet34 testreszabása regresszióhoz
 class ResNet34Custom(nn.Module):

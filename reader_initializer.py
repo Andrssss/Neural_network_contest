@@ -26,7 +26,17 @@ def initialize_data(validation_ratio, seed=1234):
     df = pd.read_csv(file_path)
     selected_data = df[['filename_id', 'defocus_label']]
     data_array = selected_data.to_numpy()
+    # --------------------------------------------------- nem biztos hogy kell
+    df['defocus_label'] = np.clip(np.round(df['defocus_label']), -10, 10)
+    logging.info("Kerekített címkék:")
+    logging.info(df.head())
+    # ---------------------------------------------------
+
     logging.info(f"data_array.shape : {data_array.shape}")
+
+
+
+
 
     # Tárolók az adatokhoz
     train_data_dict = {}
