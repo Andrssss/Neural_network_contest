@@ -4,30 +4,26 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (50, 8, 1, "SwinTransformerCustom"),
-    (55, 8, 1, "SwinTransformerCustom"),
-    (60, 8, 1, "SwinTransformerCustom"),
-    (65, 8, 1, "SwinTransformerCustom"),
-    (70, 8, 1, "SwinTransformerCustom"),
-    (75, 8, 1, "SwinTransformerCustom"),
-    (80, 8, 1, "SwinTransformerCustom"),
-    (85, 8, 1, "SwinTransformerCustom"),
-    (90, 8, 1, "SwinTransformerCustom"),
-    (95, 8, 1, "SwinTransformerCustom"),
 
-    (50, 8, 1, "ConvNeXtCustom"),
-    (55, 8, 1, "ConvNeXtCustom"),
-    (60, 8, 1, "ConvNeXtCustom"),
-    (65, 8, 1, "ConvNeXtCustom"),
-    (70, 8, 1, "ConvNeXtCustom"),
-    (75, 8, 1, "ConvNeXtCustom"),
-    (80, 8, 1, "ConvNeXtCustom"),
-    (85, 8, 1, "ConvNeXtCustom"),
-    (90, 8, 1, "ConvNeXtCustom"),
-    (95, 8, 1, "ConvNeXtCustom"),
+    (20, 64, 1, "ConvNeXtCustom"),
+    (25, 64, 1, "ConvNeXtCustom"),
+    (30, 64, 1, "ConvNeXtCustom"),
+    (35, 64, 1, "ConvNeXtCustom"),
+    (40, 64, 1, "ConvNeXtCustom"),
+    (45, 64, 1, "ConvNeXtCustom"),
+    (50, 64, 1, "ConvNeXtCustom"),
+
+    (20, 32, 1, "ConvNeXtCustom"),
+    (25, 32, 1, "ConvNeXtCustom"),
+    (30, 32, 1, "ConvNeXtCustom"),
+    (35, 32, 1, "ConvNeXtCustom"),
+    (40, 32, 1, "ConvNeXtCustom"),
+    (45, 32, 1, "ConvNeXtCustom"),
+    (50, 32, 1, "ConvNeXtCustom"),
+
 ]
 
-validation_ratio = 0.1
+validation_ratio = 0.0
 # 0.0 -> nincs validáció
 # 0.1 -> 10%
 
@@ -37,129 +33,45 @@ validation_ratio = 0.1
 # fel_le_kerekit = 1     # ennek most nincs funkciója, butaság
 # model_neve = "MobileNetV2Custom"
 
-# MobileNetV2Custom -
-# ResNet34Custom -
-# EfficientNetB0Custom - kurva lassú betanulás
-# SwinTransformerCustom -
-# ConvNeXtCustom -
+# MobileNetV2Custom     - gyors, de 20% pontosság max
+# ResNet34Custom        -
+# EfficientNetB0Custom  - kurva lassú betanulás ( laptopomon esélytelen )
+# SwinTransformerCustom - picsog ?
+# ConvNeXtCustom        - kurva lassú betanulás ( laptopomon esélytelen ) --> ez lehet, hogy arany
 
 
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import numpy as np
-import pandas as pd
-import matplotlib.image as mpimg
-import glob
 import csv
 import os
-import io
 import logging
-import sys
-import codecs
 
-from datetime import datetime
+
 from torch import nn, optim
-from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-from torchvision import transforms
-from datetime import datetime
 from torch.utils.data import Dataset, DataLoader
-from skimage.transform import resize
 from torchvision import transforms
 from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
 from evaluate_and_export import evaluate_model
 
 
-
-# UTF-8 kimenet biztosítása konzolhoz
-class Utf8StreamHandler(logging.StreamHandler):
-    def __init__(self, stream=None):
-        if stream is None:
-            stream = sys.stdout
-        super().__init__(stream=codecs.getwriter("utf-8")(stream.buffer))
-
-# Logger konfigurálása fájlba és konzolra történő íráshoz
-date_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
-log_dir = "log"  # A mappa neve
-log_file_path = f"{log_dir}/log_{date_str}.txt"
-
-# Log konfiguráció (fájl és konzol kezelése)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-    handlers=[
-        logging.FileHandler(log_file_path, encoding="utf-8"),  # Fájl log
-        Utf8StreamHandler()  # Konzol log
-    ]
-)
+# Logger létrehozás -------------------------------------
+from logger import setup_logger
+setup_logger()
 
 
-# Seed beállítása a reprodukálhatósághoz
-SEED = 1234
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-logging.info(f"Validation_ratio : {validation_ratio}")
+# Fileok beolvasása -------------------------------------
+from reader_initializer import initialize_data
+train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data()
 
 
-train_image_files = glob.glob('../Neural_network_contest/train_data/*.png')
-test_image_files = glob.glob('../Neural_network_contest/test_data/*.png')
-
-# Tárolók az adatokhoz
-train_data_dict = {}
-test_data_dict = {}
 
 
-# Fájlok beolvasása és csoportosítása ID és típus alapján
-for image_path in train_image_files:
-    file_name = os.path.splitext(os.path.basename(image_path))[0]
-    if "__" in file_name:
-        id_part = file_name.rsplit('_', 1)[0]  # itt tárolja az ID-t
-        type_part = file_name.split('_')[-1]  # itt tárolja a típusát : maszk, fázis , amplitúdó
-        if type_part in ["amp", "mask", "phase"]:
-            if id_part not in train_data_dict:
-                train_data_dict[id_part] = {'amp': None, 'mask': None, 'phase': None}
-            if train_data_dict[id_part][type_part] is None:
-                img = mpimg.imread(image_path)
-                if img.shape[:2] != (128, 128):
-                    img = resize(img, (128, 128), anti_aliasing=True)
-                train_data_dict[id_part][type_part] = img
-
-# Test képek beolvasása és csoportosítása ID és típus alapján
-for image_path in test_image_files:
-    file_name = os.path.splitext(os.path.basename(image_path))[0]
-    if "__" in file_name:
-        test_id_part = file_name.rsplit('_', 1)[0]  # ID-t tárolja
-        test_type_part = file_name.split('_')[-1]   # Típust tárolja: maszk, fázis, amplitúdó
-        if test_type_part in ["amp", "mask", "phase"]:
-            if test_id_part not in test_data_dict:
-                test_data_dict[test_id_part] = {'amp': None, 'mask': None, 'phase': None}
-            if test_data_dict[test_id_part][test_type_part] is None:
-                img = mpimg.imread(image_path)
-                if img.shape[:2] != (128, 128):
-                    img = resize(img, (128, 128), anti_aliasing=True)
-                test_data_dict[test_id_part][test_type_part] = img
 
 
-# Adatok numpy tömbbe konvertálása
-train_image_list = []
-train_image_ids = []
-for id_key, img_types in train_data_dict.items():
-    if img_types['amp'] is not None and img_types['mask'] is not None and img_types['phase'] is not None:
-        image_stack = np.stack([img_types['amp'], img_types['mask'], img_types['phase']], axis=-1)
-        train_image_list.append(image_stack)
-        train_image_ids.append(id_key)
-
-test_image_list = []
-test_image_ids = []
-for test_id_part, test_type_part in test_data_dict.items():
-    if test_type_part['amp'] is not None and test_type_part['mask'] is not None and test_type_part['phase'] is not None:
-        image_stack = np.stack([test_type_part['amp'], test_type_part['mask'], test_type_part['phase']], axis=-1)
-        test_image_list.append(image_stack)
-        test_image_ids.append(test_id_part)
 
 
 
@@ -167,9 +79,8 @@ for test_id_part, test_type_part in test_data_dict.items():
 
 
 # Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
-if validation_ratio > 0.0:
-    train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split(
-        train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
+if validation_ratio > 0.1:
+    train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split( train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
 else:
     validate_image_list = []
     validate_image_ids = []
@@ -181,28 +92,62 @@ validate_images = np.array(validate_image_list) if validate_image_list else None
 
 
 
-# Számláló a törölt elemekhez ---> KITÖRLI AMIBEN NINCS : phase + amp + mask  !!!!!!!!!!!!!!!!!
-deleted_count_train = 0
-deleted_count_test = 0
-
-# Az ID-k másolata az iterációhoz, hogy ne módosítsuk közben az eredeti dictionary-t
-for id_key in list(train_data_dict.keys()):
-    img_types = train_data_dict[id_key]
-    if img_types['amp'] is None or img_types['mask'] is None or img_types['phase'] is None:
-        del train_data_dict[id_key]
-        deleted_count_train += 1
-
-for test_id_part in list(test_data_dict.keys()):
-    img_types = test_data_dict[test_id_part]
-    if test_type_part['amp'] is None or test_type_part['mask'] is None or test_type_part['phase'] is None:
-        del test_data_dict[test_id_part]
-        deleted_count_test += 1
-
-logging.info(f"Torolt elemek szama a train-ben: {deleted_count_train}")
-logging.info(f"Torolt elemek szama a test-ben: {deleted_count_test}")
-logging.info(f"Maradek teljes elemek szama a train-ben: {len(train_data_dict)}")
-logging.info(f"Maradek teljes elemek szama a test-ben: {len(test_data_dict)}")
+# --------------------------------------   Data augmentation   ---------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+"""
+import numpy as np
+import torch
+from torchvision import transforms
+from PIL import Image
+from torch.utils.data import Dataset, DataLoader
+import torch.nn as nn
+import torch.optim as optim
+
+data_augmentation = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),  # Horizontális tükrözés
+    transforms.RandomRotation(degrees=15),   # Forgatás ±15 fokkal
+    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # Véletlen eltolás
+    transforms.ColorJitter(brightness=0.2, contrast=0.2),  # Fényerő és kontraszt változás
+    transforms.RandomResizedCrop(size=(128, 128), scale=(0.8, 1.0))  # Véletlen crop és méretezés
+])
+
+# 2. Képek augmentálása és adathalmaz bővítése
+N = 2  # Minden képből 5 augmentált változatot készítünk
+
+# ID-k és címkék összerendelése
+id_to_label = {row[0]: row[1] for row in data_array}
+
+for img, img_id in zip(train_images, train_image_ids):
+    # Címke az ID alapján
+    label = id_to_label[img_id]
+
+    # Kép átalakítása PIL formátumra az augmentációhoz
+    img_uint8 = (img * 255).astype(np.uint8)
+    pil_img = Image.fromarray(img_uint8)
+
+    for _ in range(N):
+        # Augmentáció alkalmazása
+        augmented_img = data_augmentation(pil_img)
+
+        # Visszaalakítás numpy tömbbé és hozzáadás az eredeti listákhoz
+        augmented_img_np = np.array(augmented_img).astype(np.float32)
+        train_images = np.append(train_images, [augmented_img_np], axis=0)  # Új kép hozzáadása
+        train_image_ids.append(img_id)  # Az augmentált kép ugyanazt az ID-t kapja
+
+# Ellenőrzés
+logging.info(f"Augmentált train képek száma: {len(train_images)}")
+logging.info(f"Train ID-k száma: {len(train_image_ids)}")
+"""
+# ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Kép normalizálás: skálázás 0-1 közé ---> ezt meg kell nézni, h kell-e. Mert amúgy elég erős lehet.
 # train_images = train_images / 255.0
@@ -231,8 +176,6 @@ transform_validate = transforms.Compose([
     transforms.Normalize(mean=[validate_mean], std=[validate_std])  ])
 
 
-
-
 train_image_tensors = []
 for img in train_images:
     transformed_img = transform_train(img)
@@ -254,24 +197,15 @@ if validate_images is not None:
         validate_image_tensors.append(transformed_img)
     validate_image_tensors = torch.stack(validate_image_tensors)
     logging.info(f"validate_image_tensors : {validate_image_tensors.shape}")  # [count, channels, x, y]
-
-
-
-# EXCEL BEOLVASÁS --------------------------------------------------------------
-file_path = 'data_labels_train.csv'
-df = pd.read_csv(file_path)
-selected_data = df[['filename_id', 'defocus_label']]
-data_array = selected_data.to_numpy()
-logging.info(f"data_array.shape : {data_array.shape}")
+else :
+    validate_image_tensors = None
+    validate_image_ids = None
 
 
 
 
 
 
-# --------------------------------------   Data augmentation   ---------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -280,11 +214,11 @@ logging.info(f"data_array.shape : {data_array.shape}")
 # --------------------------------------   ALAP BEALLÍTÁS  -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
-logging.info(f"Eredeti címke: {data_array[:, 1]}")
 # erre azért van szükség, mert CrossEntrophy 0-vmennyi számokat vár
-unique_labels = np.unique(data_array[:, 1])
-label_map = {label: idx for idx, label in enumerate(unique_labels)}
-mapped_labels = np.array([label_map[label] for label in data_array[:, 1]])
+logging.info(f"Eredeti címke: {data_array[:, 1]}")
+unique_labels  = np.unique(data_array[:, 1])  # Eredeti címkék
+label_map      = {label: idx for idx, label in enumerate(unique_labels)}  # Mappeljük 0-tól kezdve
+mapped_labels  = np.array([label_map[label] for label in data_array[:, 1]])
 # data_array címkék frissítése a mapped_labels segítségével
 data_array[:, 1] = mapped_labels
 logging.info(f"Átalakított címke: {data_array[:, 1]}")
@@ -302,6 +236,27 @@ logging.info(f"Átalakított címke: {data_array[:, 1]}")
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # Egyedi dataset osztály
+"""class CustomImageDataset(Dataset):
+    def __init__(self, images, image_ids, data_array, transform=None):
+        self.images = images
+        self.image_ids = image_ids
+        self.data_dict = {row[0]: row[1] for row in data_array}  # ID-k és címkék
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_ids)
+
+    def __getitem__(self, idx):
+        img = self.images[idx]
+        img_id = self.image_ids[idx]
+        label = self.data_dict[img_id]  # címke hozzárendelése az ID alapján
+
+        if self.transform:
+            img = self.transform(img)
+
+        return img, label
+"""
+
 class CustomImageDataset(Dataset):
     def __init__(self, images, image_ids, data_array, transform=None):
         self.images = images
@@ -325,18 +280,6 @@ class CustomImageDataset(Dataset):
 
 
 
-"""
-from torch.utils.data import DataLoader, random_split
-validation_split_ratio = 0.2  # 10%-os validáció
-train_size = int((1 - validation_split_ratio) * len(train_image_ids))
-val_size = len(train_image_ids) - train_size
-train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
-"""
-# Dataset betöltés
-
-
-
 
 previous_config = None
 t_loss_min = 99
@@ -353,11 +296,13 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         max_acc = 0
         val_accuracy = 0.0
         # Újrainicializáljuk az adatokat és a modellt
+        # dataset = CustomImageDataset(  images=train_image_tensors,  data_array=data_array, ids=train_image_ids, transform=transform_train)
         dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
         train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
 
         # Validation dataset (if available)
         if validate_image_tensors is not None:
+            #val_dataset = CustomImageDataset(images=validate_image_tensors, data_array=data_array, ids=validate_image_ids,   transform=transform_validate)
             val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array=data_array)
             val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
@@ -370,10 +315,15 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             criterion = nn.MSELoss()  # Regresszióhoz megfelelő
 
         elif model_neve == "MobileNetV2Custom":
-            model = MobileNetV2Custom(num_classes=num_classes)
+            # 0–40 Epoch: A MobileNetV2 kisebb és gyorsabb modell, így gyorsabban konvergálhat. Érdemes 20-30 epochot kezdetben, majd figyelni a teljesítményt. Ha szükséges, lehet növelni akár 50 epochra is.
+            # Batch Size : 32 vagy 64: A MobileNetV2 hatékonysága miatt nagyobb batch size-t is kezelhet, így érdemes 32-vel vagy 64-gyel kezdeni, hogy stabilabb gradienseket érj el. (Ha memória problémák lépnek fel, akkor 16-ra csökkenthető.)
+            model = MobileNetV2Custom(num_classes=len(label_map))  # vagy az adott modellnek megfelelő
             optimizer = optim.Adam(model.parameters(), lr=0.001)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-            criterion = nn.MSELoss()
+            # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # StepLR: 10 epochonként 0.1-es faktorral csökkenti a tanulási rátát.
+            # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50) # CosineAnnealingLR: Ha 20–50 epocra tervezel, a cosine annealing finoman csökkenti a tanulási rátát.
+            # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min') # ReduceLROnPlateau: Ha validation loss alapján szeretnéd csökkenteni a tanulási rátát
+            criterion = nn.CrossEntropyLoss()
 
         elif model_neve == "ResNet34Custom":
             model = ResNet34Custom(num_classes=num_classes)
@@ -384,15 +334,17 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         elif model_neve == "SwinTransformerCustom":
             model = SwinTransformerCustom(num_classes=num_classes)
             optimizer = optim.AdamW(model.parameters(), lr=0.0005)  # AdamW optimizer
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10,
-                                                             eta_min=1e-6)  # Speciális LR csökkentés
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)  # Speciális LR csökkentés
             criterion = nn.MSELoss()
 
         elif model_neve == "ConvNeXtCustom":
+            # Epochs -  20-40 : A ConvNeXt hálózat jól konvergálhat 20-40 epoch alatt, de ha a tanulás lassabb, akár 50 epochot is használhatsz.
+            # Batch Size - 32-64
             model = ConvNeXtCustom(num_classes=num_classes)
             optimizer = optim.AdamW(model.parameters(), lr=0.0005)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
-            criterion = nn.MSELoss()
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-7) # Ha 20-40 epochig tervezed az edzést
+            #scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
+            criterion = nn.CrossEntropyLoss(label_smoothing=0.1) # ezt kell változtatni, ha picsog
 
         else:
             raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
@@ -403,7 +355,12 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
-    logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve}")
+
+        output_file = 'log.csv'
+        with open(output_file, mode='a') as file:
+            file.write('\n')
+
+    logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve} - B = {train_batch_size}")
     # Epoch ciklus a megadott start_epoch-tól num_epochs-ig
     for epoch in range(start_epoch, num_epochs):
         model.train()
@@ -418,8 +375,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             train_loss += loss.item()
 
         train_loss /= len(train_loader)
-        if train_loss < t_loss_min:
-            t_loss_min = train_loss
+        if train_loss < t_loss_min:  t_loss_min = train_loss
         scheduler.step()
 
         # Validation evaluation
@@ -447,7 +403,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                     original_label = int(abs(float(original_label)))
 
                     # Összehasonlítás és számlálás
-                    #print(f"Predictions: {predicted_label} / Original: {original_label}")
+                    # print(f"Predictions: {predicted_label} / Original: {original_label}")
                     if predicted_label == original_label:
                         correct_count += 1
                     total_count += 1
@@ -457,7 +413,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             # Pontosság kiszámítása
             # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
             val_accuracy = correct_count / total_count
-            logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
+            logging.info(
+                f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
         else:
             logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
 
@@ -470,7 +427,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         writer = csv.writer(file)
         if not file_exists:
             writer.writerow(['Model Name', 'Epochs', 'Batch Size', 'Validation Accuracy'])  # Fejléc
-        writer.writerow([model_neve, num_epochs, train_batch_size, val_accuracy])  # Modell név is bekerül
+        writer.writerow([model_neve, num_epochs, train_batch_size, max_acc])  # Modell név is bekerül
 
     # Modell értékelése és kiiratás
     evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,max_acc)
@@ -479,7 +436,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-
 
 
 
