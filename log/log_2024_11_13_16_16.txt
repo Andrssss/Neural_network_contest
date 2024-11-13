@@ -1,0 +1,18 @@
+Validation_ratio : 0.1
+data_array.shape : (1191, 2)
+Torolt elemek szama a train-ben: 0  , Maradt : 1191
+Torolt elemek szama a test-ben: 0    , Maradt : 130
+train_image_tensors : torch.Size([1131, 3, 128, 128])
+test_image_tensors : torch.Size([130, 3, 128, 128])
+validate_image_tensors : torch.Size([60, 3, 128, 128])
+Eredeti címke: [1.957815391 -9.985237259 7.492938751 ... -1.135871743 -4.206591786
+ -8.879345336]
+Átalakított címke: [722 0 1048 ... 547 366 62]
+Loading pretrained weights from Hugging Face hub (timm/convnext_base.fb_in22k_ft_in1k)
+[timm/convnext_base.fb_in22k_ft_in1k] Safe alternative available for 'pytorch_model.bin' (as 'model.safetensors'). Loading weights using safetensors.
+Missing keys (head.fc.weight, head.fc.bias) discovered while loading pretrained weights. This is expected if model is being adapted.
+ [0 - 20] - ConvNeXtCustom - B = 64
+Epoch [1/20], Train Loss: 7.2135, Val Accuracy: 0.1167
+Epoch [2/20], Train Loss: 7.1836, Val Accuracy: 0.0667
+Epoch [3/20], Train Loss: 7.1148, Val Accuracy: 0.0667
+Epoch [4/20], Train Loss: 7.0983, Val Accuracy: 0.1167

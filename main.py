@@ -49,6 +49,7 @@ validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
 # EfficientNetB0Custom  - kurva lassú betanulás ( laptopomon esélytelen )
 # SwinTransformerCustom - picsog ?
 # ConvNeXtCustom        - kurva lassú betanulás ( laptopomon esélytelen ) --> ez lehet, hogy arany
+# AlexNet               - megnezem mennyire pontos
 
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -300,7 +301,9 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array=data_array)
             val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
+        # todo - ez mi a faszom, 21 kategória kell nem 4000
         num_classes = len(np.unique(data_array[:, 1]))
+
 
         if model_neve == "EfficientNetB0Custom":
             model = EfficientNetB0Custom(num_classes=num_classes)
@@ -339,13 +342,21 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-7) # Ha 20-40 epochig tervezed az edzést
             #scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
             criterion = nn.CrossEntropyLoss(label_smoothing=0.1) # ezt kell változtatni, ha picsog
+        elif model_neve == "AlexNet":
+            from torchvision.models import alexnet  # AlexNet importálása
 
+            # Modell inicializálása a megfelelő osztályok számával
+            model = alexnet(num_classes=num_classes)
+            optimizer = optim.Adam(model.parameters(), lr=0.001)  # Gyorsabb konvergálás érdekében
+            # Alternatíva: optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+            criterion = nn.CrossEntropyLoss()
         else:
             raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
 
-        #model = MobileNetV2Custom(num_classes=num_classes)#-------------------------------------------
-        # criterion = nn.CrossEntropyLoss()
-        # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+
+
+
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
