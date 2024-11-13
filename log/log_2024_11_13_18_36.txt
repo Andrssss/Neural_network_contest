@@ -1,0 +1,45 @@
+Validation_ratio : 0.05
+data_array.shape : (1191, 2)
+Torolt elemek szama a train-ben: 0  , Maradt : 1191
+Torolt elemek szama a test-ben:  0   , Maradt : 130
+train_image_tensors : torch.Size([1131, 3, 128, 128])
+test_image_tensors : torch.Size([130, 3, 128, 128])
+validate_image_tensors : torch.Size([60, 3, 128, 128])
+Eredeti címke: [1.957815391 -9.985237259 7.492938751 ... -1.135871743 -4.206591786
+ -8.879345336]
+Átalakított címke: [722 0 1048 ... 547 366 62]
+Loading pretrained weights from Hugging Face hub (timm/convnext_base.fb_in22k_ft_in1k)
+[timm/convnext_base.fb_in22k_ft_in1k] Safe alternative available for 'pytorch_model.bin' (as 'model.safetensors'). Loading weights using safetensors.
+Missing keys (head.fc.weight, head.fc.bias) discovered while loading pretrained weights. This is expected if model is being adapted.
+ [0 - 20] - ConvNeXtCustom - B=128
+Epoch [1/20], Train Loss: 7.2219, Val Accuracy: 0.1167
+Epoch [2/20], Train Loss: 7.1651, Val Accuracy: 0.0667
+Epoch [3/20], Train Loss: 7.1113, Val Accuracy: 0.1333
+Epoch [4/20], Train Loss: 7.0872, Val Accuracy: 0.1333
+Epoch [5/20], Train Loss: 7.0807, Val Accuracy: 0.1333
+Epoch [6/20], Train Loss: 7.0759, Val Accuracy: 0.1333
+Epoch [7/20], Train Loss: 7.0711, Val Accuracy: 0.1333
+Epoch [8/20], Train Loss: 7.0684, Val Accuracy: 0.1333
+Epoch [9/20], Train Loss: 7.0657, Val Accuracy: 0.1333
+Epoch [10/20], Train Loss: 7.0635, Val Accuracy: 0.0500
+Epoch [11/20], Train Loss: 7.0618, Val Accuracy: 0.1333
+Epoch [12/20], Train Loss: 7.0598, Val Accuracy: 0.0833
+Epoch [13/20], Train Loss: 7.0576, Val Accuracy: 0.0833
+Epoch [14/20], Train Loss: 7.0558, Val Accuracy: 0.0833
+Epoch [15/20], Train Loss: 7.0544, Val Accuracy: 0.0833
+Epoch [16/20], Train Loss: 7.0528, Val Accuracy: 0.0833
+Epoch [17/20], Train Loss: 7.0515, Val Accuracy: 0.1167
+Epoch [18/20], Train Loss: 7.0505, Val Accuracy: 0.1167
+Epoch [19/20], Train Loss: 7.0497, Val Accuracy: 0.1167
+Epoch [20/20], Train Loss: 7.0492, Val Accuracy: 0.1167
+ [20 - 25] - ConvNeXtCustom - B=128
+Epoch [21/25], Train Loss: 7.0491, Val Accuracy: 0.1167
+Epoch [22/25], Train Loss: 7.0492, Val Accuracy: 0.1167
+Epoch [23/25], Train Loss: 7.0497, Val Accuracy: 0.1167
+Epoch [24/25], Train Loss: 7.0504, Val Accuracy: 0.1167
+Epoch [25/25], Train Loss: 7.0514, Val Accuracy: 0.0833
+ [25 - 30] - ConvNeXtCustom - B=128
+Epoch [26/30], Train Loss: 7.0528, Val Accuracy: 0.1167
+Epoch [27/30], Train Loss: 7.0544, Val Accuracy: 0.1167
+Epoch [28/30], Train Loss: 7.0563, Val Accuracy: 0.1167
+Epoch [29/30], Train Loss: 7.0581, Val Accuracy: 0.0667

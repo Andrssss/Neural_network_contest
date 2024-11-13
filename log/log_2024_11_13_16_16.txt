@@ -41,3 +41,7 @@ Epoch [25/25], Train Loss: 7.0524, Val Accuracy: 0.1333
  [25 - 30] - ConvNeXtCustom - B = 64
 Epoch [26/30], Train Loss: 7.0542, Val Accuracy: 0.1167
 Epoch [27/30], Train Loss: 7.0563, Val Accuracy: 0.0500
+Epoch [28/30], Train Loss: 7.0587, Val Accuracy: 0.1167
+Epoch [29/30], Train Loss: 7.0611, Val Accuracy: 0.1333
+Epoch [30/30], Train Loss: 7.0630, Val Accuracy: 0.1167
+ [30 - 35] - ConvNeXtCustom - B = 64
