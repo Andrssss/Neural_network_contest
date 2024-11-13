@@ -9,7 +9,7 @@ from skimage.transform import resize
 import torch
 
 
-def initialize_data(validation_ratio=0.1, seed=1234):
+def initialize_data(validation_ratio, seed=1234):
     """Adatok beolvasása, csoportosítása és előkészítése a tanításhoz."""
 
     # Seed beállítása a reprodukálhatósághoz

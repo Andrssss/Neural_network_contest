@@ -4,21 +4,21 @@
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
 configurations = [
-    (20, 64, 1, "ConvNeXtCustom"),
-    (25, 64, 1, "ConvNeXtCustom"),
-    (30, 64, 1, "ConvNeXtCustom"),
-    (35, 64, 1, "ConvNeXtCustom"),
-    (40, 64, 1, "ConvNeXtCustom"),
-    (45, 64, 1, "ConvNeXtCustom"),
-    (50, 64, 1, "ConvNeXtCustom"),
+    (20, 128, 1, "ConvNeXtCustom"),
+    (25, 128, 1, "ConvNeXtCustom"),
+    (30, 128, 1, "ConvNeXtCustom"),
+    (35, 128, 1, "ConvNeXtCustom"),
+    (40, 128, 1, "ConvNeXtCustom"),
+    (45, 128, 1, "ConvNeXtCustom"),
+    (50, 128, 1, "ConvNeXtCustom"),
 
-    (20, 32, 1, "ConvNeXtCustom"),
-    (25, 32, 1, "ConvNeXtCustom"),
-    (30, 32, 1, "ConvNeXtCustom"),
-    (35, 32, 1, "ConvNeXtCustom"),
-    (40, 32, 1, "ConvNeXtCustom"),
-    (45, 32, 1, "ConvNeXtCustom"),
-    (50, 32, 1, "ConvNeXtCustom"),
+    (20, 256, 1, "ConvNeXtCustom"),
+    (25, 256, 1, "ConvNeXtCustom"),
+    (30, 256, 1, "ConvNeXtCustom"),
+    (35, 256, 1, "ConvNeXtCustom"),
+    (40, 256, 1, "ConvNeXtCustom"),
+    (45, 256, 1, "ConvNeXtCustom"),
+    (50, 256, 1, "ConvNeXtCustom"),
 
     (20, 8, 1, "ConvNeXtCustom"),
     (25, 8, 1, "ConvNeXtCustom"),
@@ -35,7 +35,6 @@ configurations = [
     (40, 16, 1, "ConvNeXtCustom"),
     (45, 16, 1, "ConvNeXtCustom"),
     (50, 16, 1, "ConvNeXtCustom"),
-
 ]
 
 validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
@@ -48,7 +47,7 @@ validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
 # ResNet34Custom        -
 # EfficientNetB0Custom  - kurva lassú betanulás ( laptopomon esélytelen )
 # SwinTransformerCustom - picsog ?
-# ConvNeXtCustom        - kurva lassú betanulás ( laptopomon esélytelen ) --> ez lehet, hogy arany
+# ConvNeXtCustom        - kurva lassú betanulás, meg jó szar is. Logban van mérés.
 # AlexNet               - megnezem mennyire pontos
 
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
@@ -70,7 +69,7 @@ from logger import setup_logger
 setup_logger()
 # Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
-train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data()
+train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio)
 
 
 
@@ -300,6 +299,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             #val_dataset = CustomImageDataset(images=validate_image_tensors, data_array=data_array, ids=validate_image_ids,   transform=transform_validate)
             val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array=data_array)
             val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
+
 
         # todo - ez mi a faszom, 21 kategória kell nem 4000
         num_classes = len(np.unique(data_array[:, 1]))
