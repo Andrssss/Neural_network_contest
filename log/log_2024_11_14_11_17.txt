@@ -1,0 +1,19 @@
+Validation_ratio : 0.05
+Kerekített címkék:
+                                         filename_id  ...  defocus_label
+0  holodetect_heamato_2024-10-14_13-32-18.27__hlg...  ...            2.0
+1  holodetect_heamato_2024-10-14_13-30-37.466__hl...  ...          -10.0
+2  holodetect_heamato_2024-10-14_13-30-12.487__hl...  ...            7.0
+3  holodetect_heamato_2024-10-14_13-30-52.625__hl...  ...            3.0
+4  holodetect_heamato_2024-10-14_13-32-43.286__hl...  ...           -0.0
+
+[5 rows x 3 columns]
+data_array.shape : (1191, 2)
+Torolt elemek szama a train-ben: 0  , Maradt : 1191
+Torolt elemek szama a test-ben:  0   , Maradt : 130
+train_image_tensors : torch.Size([1131, 3, 128, 128])
+test_image_tensors : torch.Size([130, 3, 128, 128])
+validate_image_tensors : torch.Size([60, 3, 128, 128])
+Eredeti címke: [1.957815391 -9.985237259 7.492938751 ... -1.135871743 -4.206591786
+ -8.879345336]
+Átalakított címke: [722 0 1048 ... 547 366 62]

@@ -1,0 +1,71 @@
+generated new fontManager
+Validation_ratio : 0.05
+Kerekített címkék:
+                                         filename_id  ...  defocus_label
+0  holodetect_heamato_2024-10-14_13-32-18.27__hlg...  ...            2.0
+1  holodetect_heamato_2024-10-14_13-30-37.466__hl...  ...          -10.0
+2  holodetect_heamato_2024-10-14_13-30-12.487__hl...  ...            7.0
+3  holodetect_heamato_2024-10-14_13-30-52.625__hl...  ...            3.0
+4  holodetect_heamato_2024-10-14_13-32-43.286__hl...  ...           -0.0
+
+[5 rows x 3 columns]
+data_array.shape : (1191, 2)
+Torolt elemek szama a train-ben: 0  , Maradt : 1191
+Torolt elemek szama a test-ben:  0   , Maradt : 130
+train_image_tensors : torch.Size([1131, 3, 128, 128])
+test_image_tensors : torch.Size([130, 3, 128, 128])
+validate_image_tensors : torch.Size([60, 3, 128, 128])
+Eredeti címke: [1.957815391 -9.985237259 7.492938751 ... -1.135871743 -4.206591786
+ -8.879345336]
+Átalakított címke: [722 0 1048 ... 547 366 62]
+ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)
+ optimizer = optim.Adam(model.parameters(), lr=0.001)
+ [0 - 40] - MobileNetV2Custom - B=16
+Epoch [1/40], Train Loss: 7.9279, Val Accuracy: 0.1167
+Epoch [2/40], Train Loss: 7.0953, Val Accuracy: 0.0667
+Epoch [3/40], Train Loss: 7.0525, Val Accuracy: 0.0667
+Epoch [4/40], Train Loss: 7.0201, Val Accuracy: 0.1333
+Epoch [5/40], Train Loss: 6.9516, Val Accuracy: 0.0500
+Epoch [6/40], Train Loss: 6.6888, Val Accuracy: 0.0833
+Epoch [7/40], Train Loss: 6.5007, Val Accuracy: 0.0333
+Epoch [8/40], Train Loss: 6.3512, Val Accuracy: 0.1000
+Epoch [9/40], Train Loss: 6.1862, Val Accuracy: 0.1167
+Epoch [10/40], Train Loss: 6.0018, Val Accuracy: 0.1000
+Epoch [11/40], Train Loss: 5.8636, Val Accuracy: 0.0667
+Epoch [12/40], Train Loss: 5.6517, Val Accuracy: 0.1167
+Epoch [13/40], Train Loss: 5.4465, Val Accuracy: 0.0667
+Epoch [14/40], Train Loss: 5.2559, Val Accuracy: 0.0667
+Epoch [15/40], Train Loss: 5.0278, Val Accuracy: 0.0833
+Epoch [16/40], Train Loss: 4.8996, Val Accuracy: 0.0833
+Epoch [17/40], Train Loss: 4.7131, Val Accuracy: 0.0833
+Epoch [18/40], Train Loss: 4.4594, Val Accuracy: 0.0667
+Epoch [19/40], Train Loss: 4.2633, Val Accuracy: 0.0833
+Epoch [20/40], Train Loss: 4.1306, Val Accuracy: 0.1500
+Epoch [21/40], Train Loss: 3.9256, Val Accuracy: 0.1333
+Epoch [22/40], Train Loss: 3.7110, Val Accuracy: 0.1167
+Epoch [23/40], Train Loss: 3.6205, Val Accuracy: 0.0333
+Epoch [24/40], Train Loss: 3.3426, Val Accuracy: 0.1333
+Epoch [25/40], Train Loss: 3.2259, Val Accuracy: 0.1000
+Epoch [26/40], Train Loss: 2.9468, Val Accuracy: 0.1500
+Epoch [27/40], Train Loss: 2.7643, Val Accuracy: 0.1667
+Epoch [28/40], Train Loss: 2.6393, Val Accuracy: 0.1667
+Epoch [29/40], Train Loss: 2.2485, Val Accuracy: 0.0833
+Epoch [30/40], Train Loss: 2.0964, Val Accuracy: 0.1500
+Epoch [31/40], Train Loss: 1.9554, Val Accuracy: 0.1500
+Epoch [32/40], Train Loss: 1.6292, Val Accuracy: 0.1500
+Epoch [33/40], Train Loss: 1.4055, Val Accuracy: 0.0833
+Epoch [34/40], Train Loss: 1.2482, Val Accuracy: 0.1333
+Epoch [35/40], Train Loss: 1.0930, Val Accuracy: 0.1333
+Epoch [36/40], Train Loss: 0.9048, Val Accuracy: 0.1833
+Epoch [37/40], Train Loss: 0.7835, Val Accuracy: 0.2000
+Epoch [38/40], Train Loss: 0.7393, Val Accuracy: 0.1667
+Epoch [39/40], Train Loss: 0.6106, Val Accuracy: 0.1167
+Epoch [40/40], Train Loss: 0.5924, Val Accuracy: 0.1500
+ [40 - 45] - MobileNetV2Custom - B=16
+Epoch [41/45], Train Loss: 0.5313, Val Accuracy: 0.1500
+Epoch [42/45], Train Loss: 0.4145, Val Accuracy: 0.1667
+Epoch [43/45], Train Loss: 0.3847, Val Accuracy: 0.1833
+Epoch [44/45], Train Loss: 0.3761, Val Accuracy: 0.1500
+Epoch [45/45], Train Loss: 0.4060, Val Accuracy: 0.1500
+ [45 - 50] - MobileNetV2Custom - B=16
+Epoch [46/50], Train Loss: 0.3706, Val Accuracy: 0.1667
