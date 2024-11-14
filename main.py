@@ -48,11 +48,10 @@ from evaluate_and_export import evaluate_model
 # from logger import setup_logger
 # setup_logger()
 # DATA AUGMENTATION -------------------------------------
-from data_augmentation import perform_data_augmentation
-saved_folder, saved_csv = perform_data_augmentation()
-print(f"Az augmented képek mentési mappája: {saved_folder}")
-print(f"A mentett címke CSV fájl elérési útja: {saved_csv}")
-"""
+saved_folder = "./augmentation"
+saved_csv    = "./data_labels_transformed.csv"
+
+
 # Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
 train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio,saved_csv,saved_folder)
@@ -369,6 +368,5 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-"""
 
 
