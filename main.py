@@ -45,8 +45,8 @@ from torchvision import transforms
 from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
 from evaluate_and_export import evaluate_model
 # Logger létrehozás -------------------------------------
-# from logger import setup_logger
-# setup_logger()
+from logger import setup_logger
+setup_logger()
 # DATA AUGMENTATION -------------------------------------
 saved_folder = "./augmentation"
 saved_csv    = "./data_labels_transformed.csv"
