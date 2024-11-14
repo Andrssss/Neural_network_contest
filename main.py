@@ -3,6 +3,9 @@
 # Ez azért sexy, mert teljesen autómata, mind a log, mind a file létrehozása a result mappába.
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
+
+
+
 configurations = [
     (40, 16, 1, "MobileNetV2Custom"),
     (45, 16, 1, "MobileNetV2Custom"),
@@ -35,6 +38,8 @@ validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 import torch
+print("Graphic card: ")
+print(torch.cuda.is_available())
 import numpy as np
 import csv
 import os
@@ -52,7 +57,8 @@ setup_logger()
 from reader_initializer import initialize_data
 train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio)
 
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("using device:", device)
 
 # Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
 if validation_ratio > 0.01:
@@ -287,15 +293,20 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
         if model_neve == "EfficientNetB0Custom":
+
             model = EfficientNetB0Custom(num_classes=num_classes)
+            model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
             scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
             criterion = nn.MSELoss()  # Regresszióhoz megfelelő
 
         elif model_neve == "MobileNetV2Custom":
+
             # 0–40 Epoch: A MobileNetV2 kisebb és gyorsabb modell, így gyorsabban konvergálhat. Érdemes 20-30 epochot kezdetben, majd figyelni a teljesítményt. Ha szükséges, lehet növelni akár 50 epochra is.
             # Batch Size : 32 vagy 64: A MobileNetV2 hatékonysága miatt nagyobb batch size-t is kezelhet, így érdemes 32-vel vagy 64-gyel kezdeni, hogy stabilabb gradienseket érj el. (Ha memória problémák lépnek fel, akkor 16-ra csökkenthető.)
             model = MobileNetV2Custom(num_classes=len(label_map))  # vagy az adott modellnek megfelelő
+            model = model.to(device)
+
             optimizer = optim.Adam(model.parameters(), lr=0.001)
             # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
             #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # StepLR: 10 epochonként 0.1-es faktorral csökkenti a tanulási rátát. -> may 20%
@@ -349,12 +360,13 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             file.write('\n')
 
     logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve} - B={train_batch_size}")
+
     # Epoch ciklus a megadott start_epoch-tól num_epochs-ig
     for epoch in range(start_epoch, num_epochs):
         model.train()
         train_loss = 0.0
         for train_images, labels in train_loader:
-            train_images, labels = train_images.to(dev), labels.to(dev).long()
+            train_images, labels = train_images.to(device), labels.to(device).long()
             optimizer.zero_grad()
             outputs = model(train_images)
             loss = criterion(outputs, labels)
@@ -378,7 +390,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
             with torch.no_grad():  # Gradiensek nem szükségesek kiértékelés során
                 for test_images, test_ids in zip(validate_image_tensors, validate_image_ids):
-                    test_images = test_images.unsqueeze(0).to(dev)
+                    test_images = test_images.unsqueeze(0).to(device)
 
                     outputs = model(test_images)
                     _, predicted = torch.max(outputs, 1)
