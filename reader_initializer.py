@@ -9,26 +9,33 @@ from skimage.transform import resize
 import torch
 
 
-def initialize_data(validation_ratio, seed=1234):
+def initialize_data(validation_ratio,saved_csv,saved_folder):
     """Adatok beolvasása, csoportosítása és előkészítése a tanításhoz."""
-
+    seed = 1234
     # Seed beállítása a reprodukálhatósághoz
     np.random.seed(seed)
     torch.manual_seed(seed)
     logging.info(f"Validation_ratio : {validation_ratio}")
 
     # Képek és címkék betöltése
-    train_image_files = glob.glob('../Neural_network_contest/train_data/*.png')
+    #train_image_files = glob.glob('../Neural_network_contest/train_data/*.png')
+    # Elérési út létrehozása a saved_folder változó alapján
+    train_image_files = glob.glob(f"{saved_folder}/*.png")
+    # Az elérési utak megjelenítése
+    print("Augmented képek elérési útjai:")
+    for file_path in train_image_files:
+        print(file_path)
+
+
     test_image_files = glob.glob('../Neural_network_contest/test_data/*.png')
 
     # EXCEL beolvasás
-    file_path = 'data_labels_train.csv'
+    file_path = saved_csv
     df = pd.read_csv(file_path)
     selected_data = df[['filename_id', 'defocus_label']]
     data_array = selected_data.to_numpy()
     # --------------------------------------------------- nem biztos hogy kell
-    df['defocus_label'] = np.clip(np.round(df['defocus_label']), -10, 10)
-    logging.info("Kerekített címkék:")
+    #df['defocus_label'] = np.clip(np.round(df['defocus_label']), -10, 10)
     logging.info(df.head())
     # ---------------------------------------------------
 

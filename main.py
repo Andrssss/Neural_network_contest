@@ -3,34 +3,30 @@
 # Ez azért sexy, mert teljesen autómata, mind a log, mind a file létrehozása a result mappába.
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
 
-
+# Start tensorboard. --> ez összehasonlítja a különböző modellek tanulását
+# %load_ext tensorboard
+# %tensorboard --logdir lightning_logs/
 
 
 configurations = [
-    (40, 16, 1, "MobileNetV2Custom"),
-    (45, 16, 1, "MobileNetV2Custom"),
-    (50, 16, 1, "MobileNetV2Custom"),
-    (55, 16, 1, "MobileNetV2Custom"),
-    (60, 16, 1, "MobileNetV2Custom"),
-    (65, 16, 1, "MobileNetV2Custom"),
-    (70, 16, 1, "MobileNetV2Custom"),
-    (75, 16, 1, "MobileNetV2Custom"),
-    (80, 16, 1, "MobileNetV2Custom"),
-    (85, 16, 1, "MobileNetV2Custom"),
-    (90, 16, 1, "MobileNetV2Custom"),
-    (95, 16, 1, "MobileNetV2Custom"),
+
+(80, 8, 1, "MobileNetV2Custom"),
+(100, 8, 1, "MobileNetV2Custom"),
+(120,8,1,"MobileNetV2Custom"),
+(150, 8, 1, "MobileNetV2Custom"),
+
 ]
 
-validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
-# num_epochs = 50
+validation_ratio   = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
+# num_epochs       = 50
 # train_batch_size = 8
-# fel_le_kerekit = 1     # ennek most nincs funkciója, butaság
-# model_neve = "MobileNetV2Custom"
+# fel_le_kerekit   = 1     # ennek most nincs funkciója, butaság
+# model_neve       = "MobileNetV2Custom"
 
-# MobileNetV2Custom     - gyors, de 20% pontosság max
+# MobileNetV2Custom     - gyors, de 20% pontosság max,eddig
 # ResNet34Custom        -
 # EfficientNetB0Custom  - kurva lassú betanulás ( laptopomon esélytelen )
-# SwinTransformerCustom - picsog ?
+# SwinTransformerCustom - picsog
 # ConvNeXtCustom        - kurva lassú betanulás, meg jó szar is. Logban van mérés.
 # AlexNet               - megnezem mennyire pontos
 
@@ -38,8 +34,6 @@ validation_ratio = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 import torch
-print("Graphic card: ")
-print(torch.cuda.is_available())
 import numpy as np
 import csv
 import os
@@ -53,12 +47,24 @@ from evaluate_and_export import evaluate_model
 # Logger létrehozás -------------------------------------
 from logger import setup_logger
 setup_logger()
+# DATA AUGMENTATION -------------------------------------
+from data_augmentation import perform_data_augmentation
+saved_folder, saved_csv = perform_data_augmentation()
+print(f"Az augmented képek mentési mappája: {saved_folder}")
+print(f"A mentett címke CSV fájl elérési útja: {saved_csv}")
+"""
 # Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
-train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio)
-
+train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio,saved_csv,saved_folder)
+# GPU beállítása ha lehet -------------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("using device:", device)
+print(f"Graphic card: {torch.cuda.is_available()}")
+
+
+
+
+
 
 # Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
 if validation_ratio > 0.01:
@@ -71,58 +77,6 @@ test_images = np.array(test_image_list)
 train_images = np.array(train_image_list)
 validate_images = np.array(validate_image_list) if validate_image_list else None
 
-
-
-# --------------------------------------   Data augmentation   ---------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-"""
-import numpy as np
-import torch
-from torchvision import transforms
-from PIL import Image
-from torch.utils.data import Dataset, DataLoader
-import torch.nn as nn
-import torch.optim as optim
-
-data_augmentation = transforms.Compose([
-    transforms.RandomHorizontalFlip(p=0.5),  # Horizontális tükrözés
-    transforms.RandomRotation(degrees=15),   # Forgatás ±15 fokkal
-    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # Véletlen eltolás
-    transforms.ColorJitter(brightness=0.2, contrast=0.2),  # Fényerő és kontraszt változás
-    transforms.RandomResizedCrop(size=(128, 128), scale=(0.8, 1.0))  # Véletlen crop és méretezés
-])
-
-# 2. Képek augmentálása és adathalmaz bővítése
-N = 2  # Minden képből 5 augmentált változatot készítünk
-
-# ID-k és címkék összerendelése
-id_to_label = {row[0]: row[1] for row in data_array}
-
-for img, img_id in zip(train_images, train_image_ids):
-    # Címke az ID alapján
-    label = id_to_label[img_id]
-
-    # Kép átalakítása PIL formátumra az augmentációhoz
-    img_uint8 = (img * 255).astype(np.uint8)
-    pil_img = Image.fromarray(img_uint8)
-
-    for _ in range(N):
-        # Augmentáció alkalmazása
-        augmented_img = data_augmentation(pil_img)
-
-        # Visszaalakítás numpy tömbbé és hozzáadás az eredeti listákhoz
-        augmented_img_np = np.array(augmented_img).astype(np.float32)
-        train_images = np.append(train_images, [augmented_img_np], axis=0)  # Új kép hozzáadása
-        train_image_ids.append(img_id)  # Az augmentált kép ugyanazt az ID-t kapja
-
-# Ellenőrzés
-logging.info(f"Augmentált train képek száma: {len(train_images)}")
-logging.info(f"Train ID-k száma: {len(train_image_ids)}")
-"""
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -217,27 +171,6 @@ logging.info(f"Átalakított címke: {data_array[:, 1]}")
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # Egyedi dataset osztály
-"""class CustomImageDataset(Dataset):
-    def __init__(self, images, image_ids, data_array, transform=None):
-        self.images = images
-        self.image_ids = image_ids
-        self.data_dict = {row[0]: row[1] for row in data_array}  # ID-k és címkék
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.image_ids)
-
-    def __getitem__(self, idx):
-        img = self.images[idx]
-        img_id = self.image_ids[idx]
-        label = self.data_dict[img_id]  # címke hozzárendelése az ID alapján
-
-        if self.transform:
-            img = self.transform(img)
-
-        return img, label
-"""
-
 class CustomImageDataset(Dataset):
     def __init__(self, images, image_ids, data_array, transform=None):
         self.images = images
@@ -436,6 +369,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-
+"""
 
 
