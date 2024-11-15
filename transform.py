@@ -13,14 +13,7 @@ def rotate_fixed_angles(img):
     rotated = img.rotate(angle, resample=Image.BILINEAR)
     return rotated
 
-# Transzformációk definiálása
-horizontal_flip = transforms.RandomHorizontalFlip(p=1.0)  # 100% eséllyel tükröz
-rotation = rotate_fixed_angles  # Rögzített szögek szerinti forgatás
 
-data_augmentations = [
-    ("Horizontal Flip", horizontal_flip),
-    ("Rotation", rotation),
-]
 
 # Fájlok csoportosítása közös alapnév szerint
 def group_images_by_basename(input_dir):
@@ -36,6 +29,15 @@ def group_images_by_basename(input_dir):
 
 # Augmentált képek létrehozása és címke mentése
 def augment_and_save_images(input_dir, output_dir, label_file, output_label_file, num_augments=5):
+    # Transzformációk definiálása
+    horizontal_flip = transforms.RandomHorizontalFlip(p=1.0)  # 100% eséllyel tükröz
+    rotation = rotate_fixed_angles  # Rögzített szögek szerinti forgatás
+
+    data_augmentations = [
+        ("Horizontal Flip", horizontal_flip),
+        ("Rotation", rotation),
+    ]
+
     # Címkék beolvasása
     labels = {}
     with open(label_file, mode='r') as file:
@@ -64,7 +66,7 @@ def augment_and_save_images(input_dir, output_dir, label_file, output_label_file
                 torch.manual_seed(int.from_bytes(f"{base_name}_{augment_idx}".encode(), 'little') % (2 ** 32))
                 transform_name, transform = data_augmentations[random.randint(0, len(data_augmentations) - 1)]
 
-                print(f"\nFeldolgozás csoport: {base_name} (Transzformáció: {transform_name})")
+                # print(f"\nFeldolgozás csoport: {base_name} (Transzformáció: {transform_name})")
 
                 for filename in file_list:
                     img_path = os.path.join(input_dir, filename)
@@ -86,7 +88,7 @@ def augment_and_save_images(input_dir, output_dir, label_file, output_label_file
                     class_label, defocus_label = labels[base_name]
                     writer.writerow([f"{augment_idx}_{base_name}", class_label, defocus_label])
 
-                print(f"  Mentett fájlok: {[f'{augment_idx}_{fname}' for fname in file_list]}")
+                # print(f"  Mentett fájlok: {[f'{augment_idx}_{fname}' for fname in file_list]}")
 
 # Fájlazonosító tisztító függvény
 def clean_filename(filename):

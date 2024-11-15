@@ -1,14 +1,16 @@
-
-# ITT lehet változtatni, hogy milyen konfigurációkkal fusson le egymás után.
-# Ez azért sexy, mert teljesen autómata, mind a log, mind a file létrehozása a result mappába.
-# Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző
-
 # Start tensorboard. --> ez összehasonlítja a különböző modellek tanulását
 # %load_ext tensorboard
 # %tensorboard --logdir lightning_logs/
 
 
+validation_ratio     = 0.1   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
+hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
+Augmentációs_szám    = 5
+kerekitsen_labeleket = False
 
+
+
+# Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
     (150, 8, 1, "MobileNetV2Custom"),
     (300, 8, 1, "MobileNetV2Custom"),
@@ -17,18 +19,13 @@ configurations = [
     (150, 32, 1, "MobileNetV2Custom"),
     (300, 32, 1, "MobileNetV2Custom"),
 
-    (150, 8, 1, "AlexNet"),  # AlexNet - Gyors, de elavult
-    (300, 8, 1, "AlexNet"),
-    (150, 16, 1, "AlexNet"),
-    (300, 16, 1, "AlexNet"),
-    (150, 32, 1, "AlexNet"),
-    (300, 32, 1, "AlexNet"),
+    (3000, 32, 1, "AlexNet"),
 ]
 
-validation_ratio   = 0.1   # 0.0 -> nincs validáció   0.1 -> 10%
+
 # num_epochs       = 50
 # train_batch_size = 8
-# fel_le_kerekit   = 1     # ennek most nincs funkciója, butaság
+# fel_le_kerekit   = 1     # ennek még nincs funkciója, butaság
 # model_neve       = "MobileNetV2Custom"
 
 # MobileNetV2Custom     - gyors, de 20% pontosság max,eddig
@@ -38,16 +35,23 @@ validation_ratio   = 0.1   # 0.0 -> nincs validáció   0.1 -> 10%
 # ConvNeXtCustom        - kurva lassú betanulás, meg jó szar is. Logban van mérés.
 # AlexNet               - megnezem mennyire pontos
 
+
+
+# ----------------------------------------------------------------------------------------  DATA AUGMENTATION
+
+
+
+
 # --------------------------------------   INICIALIZÁLÁS   -------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 import torch
 import numpy as np
 import csv
-import os
 import logging
+import os
+
 from torch import nn, optim
-from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
@@ -55,30 +59,48 @@ from evaluate_and_export import evaluate_model
 # Logger létrehozás -------------------------------------
 from logger import setup_logger
 setup_logger()
-# DATA AUGMENTATION -------------------------------------
-saved_folder = "./augmentation"
-saved_csv    = "./data_labels_transformed.csv"
-# saved_folder = "./train_data"
-# saved_csv    = "./data_labels_train.csv"
+logging.info(f"Validation_ratio : {validation_ratio}")
+# DATA AUGMENTATION ------------------------------------- vad verzió
+source_folder = "./train_data"
+output_dir = "./augmentation"
+original_csv_file = label_file = "./data_labels_train.csv"
+output_label_file = './data_labels_transformed.csv'
+test_folder = "./test_data"
+train_folder = "train_data_2"
+validation_folder = "validation_data"
+train_csv_path = "data_labels_train_2.csv"
+validation_csv_path = './validation_data.csv'
+
+def process_and_augment_data():
+    from transform_2 import process_data
+    process_data(source_folder, train_folder, validation_folder, original_csv_file, train_csv_path, validation_csv_path,validation_ratio)
+    from transform import augment_and_save_images
+    augment_and_save_images(train_folder, output_dir, train_csv_path, output_label_file, num_augments=Augmentációs_szám)
+
+if hozzon_letre_uj_augmentalt_fileokat_e :
+    process_and_augment_data()
 
 # Fileok beolvasása -------------------------------------
+if not os.path.exists(validation_folder): # Ha a mappa nem létezik, létrehozzuk
+    os.makedirs(validation_folder)
+    print(f"A mappa létrehozva: {validation_folder}")
+    process_and_augment_data()
+elif not os.listdir(validation_folder):     # Ha a mappa létezik, de üres, meghívjuk a callback függvényt
+    print(f"A mappa létezik, de üres: {validation_folder}")
+    process_and_augment_data()
+
 from reader_initializer import initialize_data
-train_image_list, train_image_ids, test_image_list, test_image_ids, data_array = initialize_data(validation_ratio,saved_csv,saved_folder)
+train_image_list, train_image_ids, validate_image_list, validate_image_ids, test_image_list, test_image_ids, data_array = initialize_data(output_dir,validation_folder,test_folder,label_file,validation_ratio,kerekitsen_labeleket)
+
+
+
+
 # GPU beállítása ha lehet -------------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("using device:", device)
 print(f"Graphic card: {torch.cuda.is_available()}")
 
 
-# Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
-if validation_ratio > 0.01:
-    train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split( train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
-else:
-    validate_image_list = []
-    validate_image_ids = []
-
-print(f"Lista hossza: {len(train_image_list)}") # 1191
-print(train_image_list[0].shape)  # Az első kép alakja
 
 
 test_images = np.array(test_image_list)
@@ -179,12 +201,23 @@ logging.info(f"Átalakított címke: {data_array[:, 1]}")
 # --------------------------------------   BETANITAS  ------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
+# Augmentáció miatt, lecsícsi az elejéről a számot és így kereshető az ID
+def normalize_id(img_id):
+    parts = img_id.split('_', 1)  # Az első '_' után osztjuk ketté
+    if parts[0].isdigit():  # Csak akkor vágjuk le, ha az első rész szám
+        return parts[1]
+    return img_id  # Ha nincs prefix, az eredeti ID-t adjuk vissza
+
+
+
+
 # Egyedi dataset osztály
 class CustomImageDataset(Dataset):
     def __init__(self, images, image_ids, data_array, transform=None):
         self.images = images
         self.image_ids = image_ids
-        self.data_dict = {row[0]: row[1] for row in data_array}  # ID-k és címkék
+        # Az ID-k normalizálása a data_dict létrehozásakor
+        self.data_dict = {normalize_id(row[0]): row[1] for row in data_array}
         self.transform = transform
 
     def __len__(self):
@@ -192,14 +225,13 @@ class CustomImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img = self.images[idx]
-        img_id = self.image_ids[idx]
-        label = self.data_dict[img_id]  # címke hozzárendelése az ID alapján
+        img_id = normalize_id(self.image_ids[idx])  # Normalizált ID használata
+        label = self.data_dict[img_id]  # Címke hozzárendelése a normalizált ID alapján
 
         if self.transform:
             img = self.transform(img)
 
         return img, label
-
 
 
 
@@ -210,7 +242,7 @@ max_acc = 0
 val_accuracy = 0.0
 
 # EARLY STOPPING
-patience = 20  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
+patience = 10  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
 best_val_loss = float('inf')  # Legjobb validációs veszteség
 early_stopping_counter = 0  # Megszakítás számláló
 
@@ -219,6 +251,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
     else:
+        early_stopping_counter = 0
         t_loss_min = 99
         max_acc = 0
         val_accuracy = 0.0
@@ -324,8 +357,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         train_loss /= len(train_loader)
         if train_loss < t_loss_min:  t_loss_min = train_loss
         scheduler.step()
-
-        # Log current learning rate
+        # Log  Current Learning Rate
+        # current_lr = optimizer.param_groups[0]['lr']
         current_lr = scheduler.get_last_lr()[0]
 
 
@@ -373,9 +406,9 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
             val_loss /= len(validate_image_ids)
             val_accuracy = correct_count / total_count
-            logging.info(  f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}, Val loss: {val_loss:.4f}")
+            logging.info(  f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}, Val loss: {val_loss:.4f}, LR: {current_lr:.6f}")
         else:
-            logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
+            logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, LR: {current_lr:.6f}")
         if cur_acc < val_accuracy: cur_acc = val_accuracy
         if max_acc < val_accuracy: max_acc = val_accuracy
 
@@ -389,7 +422,14 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             # logging.info("Checkpoint saved.")
         else:
             early_stopping_counter += 1
-            if early_stopping_counter >= patience:
+            if early_stopping_counter == patience:
+                logging.info("Early stopping triggered.")
+                # Modell értékelése és kiiratás
+                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size, val_accuracy, 0, model_neve, t_loss_min, cur_acc)
+                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size, val_accuracy, 1, model_neve, t_loss_min, cur_acc)
+                previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
+                break
+            elif early_stopping_counter > patience:
                 logging.info("Early stopping triggered.")
                 break
 
@@ -406,8 +446,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     # Modell értékelése és kiiratás
     evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,cur_acc)
     evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
-
-
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
 
