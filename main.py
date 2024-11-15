@@ -7,14 +7,7 @@
 # %load_ext tensorboard
 # %tensorboard --logdir lightning_logs/
 
-'''configurations = [
 
-(80, 8, 1, "MobileNetV2Custom"),
-(100, 8, 1, "MobileNetV2Custom"),
-(120,8,1,"MobileNetV2Custom"),
-(150, 8, 1, "MobileNetV2Custom"),
-
-]'''
 
 configurations = [
     (150, 8, 1, "MobileNetV2Custom"),
@@ -24,34 +17,6 @@ configurations = [
     (150, 32, 1, "MobileNetV2Custom"),
     (300, 32, 1, "MobileNetV2Custom"),
 
-    (150, 8, 1, "ResNet34Custom"),  # ResNet34 - Stabil, de lassabb tanulás
-    (300, 8, 1, "ResNet34Custom"),
-    (150, 16, 1, "ResNet34Custom"),
-    (300, 16, 1, "ResNet34Custom"),
-    (150, 32, 1, "ResNet34Custom"),
-    (300, 32, 1, "ResNet34Custom"),
-
-    (150, 8, 1, "EfficientNetB0Custom"),  # EfficientNetB0 - Nagyon lassú tanulás, de jobb pontosság
-    (300, 8, 1, "EfficientNetB0Custom"),
-    (150, 16, 1, "EfficientNetB0Custom"),
-    (300, 16, 1, "EfficientNetB0Custom"),
-    (150, 32, 1, "EfficientNetB0Custom"),
-    (300, 32, 1, "EfficientNetB0Custom"),
-
-    (150, 8, 1, "SwinTransformerCustom"),  # Swin Transformer - Picsogás a memóriaigény miatt
-    (300, 8, 1, "SwinTransformerCustom"),
-    (150, 16, 1, "SwinTransformerCustom"),
-    (300, 16, 1, "SwinTransformerCustom"),
-    (150, 32, 1, "SwinTransformerCustom"),
-    (300, 32, 1, "SwinTransformerCustom"),
-
-    (150, 8, 1, "ConvNeXtCustom"),  # ConvNeXt - Lassú, és nem hoz jó eredményeket (Logban rögzítve)
-    (300, 8, 1, "ConvNeXtCustom"),
-    (150, 16, 1, "ConvNeXtCustom"),
-    (300, 16, 1, "ConvNeXtCustom"),
-    (150, 32, 1, "ConvNeXtCustom"),
-    (300, 32, 1, "ConvNeXtCustom"),
-
     (150, 8, 1, "AlexNet"),  # AlexNet - Gyors, de elavult
     (300, 8, 1, "AlexNet"),
     (150, 16, 1, "AlexNet"),
@@ -60,7 +25,7 @@ configurations = [
     (300, 32, 1, "AlexNet"),
 ]
 
-validation_ratio   = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
+validation_ratio   = 0.1   # 0.0 -> nincs validáció   0.1 -> 10%
 # num_epochs       = 50
 # train_batch_size = 8
 # fel_le_kerekit   = 1     # ennek most nincs funkciója, butaság
@@ -93,7 +58,8 @@ setup_logger()
 # DATA AUGMENTATION -------------------------------------
 saved_folder = "./augmentation"
 saved_csv    = "./data_labels_transformed.csv"
-
+# saved_folder = "./train_data"
+# saved_csv    = "./data_labels_train.csv"
 
 # Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
@@ -104,16 +70,16 @@ print("using device:", device)
 print(f"Graphic card: {torch.cuda.is_available()}")
 
 
-
-
-
-
 # Set validation ratio (0.1 for 90-10 split; set to 0.0 for 100-0 split)
 if validation_ratio > 0.01:
     train_image_list, validate_image_list, train_image_ids, validate_image_ids = train_test_split( train_image_list, train_image_ids, test_size=validation_ratio, random_state=42 )
 else:
     validate_image_list = []
     validate_image_ids = []
+
+print(f"Lista hossza: {len(train_image_list)}") # 1191
+print(train_image_list[0].shape)  # Az első kép alakja
+
 
 test_images = np.array(test_image_list)
 train_images = np.array(train_image_list)
@@ -155,14 +121,16 @@ transform_validate = transforms.Compose([
 
 train_image_tensors = []
 for img in train_images:
-    transformed_img = transform_train(img)
+    transformed_img = transform_train(img).float()  # Konvertálás float32-re
     train_image_tensors.append(transformed_img)
-train_image_tensors = torch.stack(train_image_tensors)
-logging.info(f"train_image_tensors : {train_image_tensors.shape}")  # [db, type, x, y]
+
+train_image_tensors = torch.stack(train_image_tensors) # [db, type, x, y]
+print(f"Train tensor dtype: {train_image_tensors.dtype}")
+
 
 test_image_tensors = []
 for img in test_images:
-    transformed_img = transform_test(img)
+    transformed_img = transform_test(img).float()  # float32 biztosítás
     test_image_tensors.append(transformed_img)
 test_image_tensors = torch.stack(test_image_tensors)
 logging.info(f"test_image_tensors : {test_image_tensors.shape}")  # [db, type, x, y]
@@ -170,10 +138,9 @@ logging.info(f"test_image_tensors : {test_image_tensors.shape}")  # [db, type, x
 if validate_images is not None:
     validate_image_tensors = []
     for img in validate_images:
-        transformed_img = transform_validate(img)
+        transformed_img = transform_validate(img).float()  # float32 biztosítás
         validate_image_tensors.append(transformed_img)
-    validate_image_tensors = torch.stack(validate_image_tensors)
-    logging.info(f"validate_image_tensors : {validate_image_tensors.shape}")  # [count, channels, x, y]
+    validate_image_tensors = torch.stack(validate_image_tensors)  # [count, channels, x, y]
 else :
     validate_image_tensors = None
     validate_image_ids = None
@@ -242,6 +209,10 @@ t_loss_min = 99
 max_acc = 0
 val_accuracy = 0.0
 
+# EARLY STOPPING
+patience = 20  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
+best_val_loss = float('inf')  # Legjobb validációs veszteség
+early_stopping_counter = 0  # Megszakítás számláló
 
 for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     cur_acc = 0.0
@@ -327,6 +298,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print("using device:", device)
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
 
@@ -353,13 +325,16 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         if train_loss < t_loss_min:  t_loss_min = train_loss
         scheduler.step()
 
-        # Validation evaluation
-        # Validation evaluation
+        # Log current learning rate
+        current_lr = scheduler.get_last_lr()[0]
+
+
+        # Validation evaluation ----------------------------------------------------
         if validate_image_tensors is not None:
             model.eval()  # Váltás kiértékelési módba
-
             results = []
             reverse_label_map = {idx: label for label, idx in label_map.items()}  # Címkék visszafejtése
+            val_loss = 0.0
             correct_count = 0  # Egyezések számlálása
             total_count = 0  # Összes validációs adat száma
 
@@ -369,15 +344,24 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
                     outputs = model(test_images)
                     _, predicted = torch.max(outputs, 1)
-
-                    predicted_label = reverse_label_map[predicted.item()]
-                    predicted_label = int(abs(float(predicted_label)))
+                    predicted_label = predicted
+                    #predicted_label = reverse_label_map[predicted.item()]
+                    #predicted_label = int(abs(float(predicted_label)))
 
                     # Az eredeti címke kinyerése az ID alapján
-                    original_label = reverse_label_map[data_array[data_array[:, 0] == test_ids, 1].item()]
-                    original_label = int(abs(float(original_label)))
+                    # original_label = reverse_label_map[data_array[data_array[:, 0] == test_ids, 1].item()]
+                    # original_label original_label = int(abs(float(original_label)))
+
+                    original_label = data_array[data_array[:, 0] == test_ids, 1].item()
+                    original_label_tensor = torch.tensor([original_label], dtype=torch.long).to(device)
+                    #
+                    # # Veszteség számítása a valós címkékkel
+                    loss = criterion(outputs, original_label_tensor)
+                    val_loss += loss.item()
+
 
                     # Összehasonlítás és számlálás
+                    predicted_label = predicted_label.item()
                     # print(f"Predictions: {predicted_label} / Original: {original_label}")
                     if predicted_label == original_label:
                         correct_count += 1
@@ -387,13 +371,28 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
             # Pontosság kiszámítása
             # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
+            val_loss /= len(validate_image_ids)
             val_accuracy = correct_count / total_count
-            logging.info(
-                f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
+            logging.info(  f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}, Val loss: {val_loss:.4f}")
         else:
             logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}")
         if cur_acc < val_accuracy: cur_acc = val_accuracy
         if max_acc < val_accuracy: max_acc = val_accuracy
+
+
+        # Early stopping check
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            early_stopping_counter = 0
+            # Save model checkpoint to handle overfitting
+            # torch.save(model.state_dict(), 'best_model_checkpoint.pth') ----------> lehet vele menteni
+            # logging.info("Checkpoint saved.")
+        else:
+            early_stopping_counter += 1
+            if early_stopping_counter >= patience:
+                logging.info("Early stopping triggered.")
+                break
+
 
     # Loggolás, mentés és egyéb műveletek
     output_file = 'log.csv'
@@ -411,5 +410,4 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-
 
