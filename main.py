@@ -298,6 +298,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print("using device:", device)
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
 
