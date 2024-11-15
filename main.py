@@ -360,6 +360,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
                     # Összehasonlítás és számlálás
+                    predicted_label = predicted_label.item()
                     # print(f"Predictions: {predicted_label} / Original: {original_label}")
                     if predicted_label == original_label:
                         correct_count += 1
