@@ -6,37 +6,21 @@ import re
 import random
 import torch
 
-
-# Egyéni forgatás tükrözéssel a széleken
-def rotate_with_reflect(img, degrees):
-    """ Forgatás tükrözött szélkitöltéssel """
-    rotated = img.rotate(degrees, resample=Image.BILINEAR, fillcolor=None)
-    img_width, img_height = img.size
-
-    # A forgatás során keletkező fekete pixelek helyettesítése tükrözött szélekkel
-    for x in range(img_width):
-        for y in range(img_height):
-            if rotated.getpixel((x, y)) == (0, 0, 0):
-                if 0 <= x < img_width // 2:
-                    rotated.putpixel((x, y), img.getpixel((x * 2, y % img_height)))
-                else:
-                    rotated.putpixel((x, y), img.getpixel(((img_width - x - 1) * 2, y % img_height)))
+# Egyéni forgatás, amely 90, 180 vagy 270 fokos
+def rotate_fixed_angles(img):
+    """ Forgatás 90, 180 vagy 270 fokkal, véletlenszerűen """
+    angle = random.choice([90, 180, 270])
+    rotated = img.rotate(angle, resample=Image.BILINEAR)
     return rotated
-
 
 # Transzformációk definiálása
 horizontal_flip = transforms.RandomHorizontalFlip(p=1.0)  # 100% eséllyel tükröz
-rotation = lambda img: rotate_with_reflect(img, 15)  # Egyéni forgatás 15 fokkal
-#translation = transforms.RandomAffine(degrees=0, translate=(0.1, 0.1))  # Véletlen eltolás
-#brightness_adjust = transforms.ColorJitter(brightness=0.2)  # Fényerő változtatás
+rotation = rotate_fixed_angles  # Rögzített szögek szerinti forgatás
 
 data_augmentations = [
     ("Horizontal Flip", horizontal_flip),
     ("Rotation", rotation),
-    #("Translation", translation),
-    #("Brightness Adjust", brightness_adjust),
 ]
-
 
 # Fájlok csoportosítása közös alapnév szerint
 def group_images_by_basename(input_dir):
@@ -49,7 +33,6 @@ def group_images_by_basename(input_dir):
                 grouped_files[base_name] = []
             grouped_files[base_name].append(filename)
     return grouped_files
-
 
 # Augmentált képek létrehozása és címke mentése
 def augment_and_save_images(input_dir, output_dir, label_file, output_label_file, num_augments=5):
@@ -89,7 +72,7 @@ def augment_and_save_images(input_dir, output_dir, label_file, output_label_file
 
                     # Transzformáció alkalmazása
                     if transform_name == "Rotation":
-                        augmented_img = rotate_with_reflect(img, degrees=15)
+                        augmented_img = rotate_fixed_angles(img)
                     else:
                         augmented_img = transform(img)
 
@@ -105,13 +88,11 @@ def augment_and_save_images(input_dir, output_dir, label_file, output_label_file
 
                 print(f"  Mentett fájlok: {[f'{augment_idx}_{fname}' for fname in file_list]}")
 
-
 # Fájlazonosító tisztító függvény
 def clean_filename(filename):
     filename = os.path.splitext(filename)[0]
     filename = re.sub(r'(_amp|_phase|_mask)$', '', filename)
     return filename
-
 
 # Futtatás a megadott mappára
 input_dir = "./train_data"  # Az eredeti képek mappája

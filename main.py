@@ -7,14 +7,57 @@
 # %load_ext tensorboard
 # %tensorboard --logdir lightning_logs/
 
-
-configurations = [
+'''configurations = [
 
 (80, 8, 1, "MobileNetV2Custom"),
 (100, 8, 1, "MobileNetV2Custom"),
 (120,8,1,"MobileNetV2Custom"),
 (150, 8, 1, "MobileNetV2Custom"),
 
+]'''
+
+configurations = [
+    (150, 8, 1, "MobileNetV2Custom"),
+    (300, 8, 1, "MobileNetV2Custom"),
+    (150, 16, 1, "MobileNetV2Custom"),
+    (300, 16, 1, "MobileNetV2Custom"),
+    (150, 32, 1, "MobileNetV2Custom"),
+    (300, 32, 1, "MobileNetV2Custom"),
+
+    (150, 8, 1, "ResNet34Custom"),  # ResNet34 - Stabil, de lassabb tanulás
+    (300, 8, 1, "ResNet34Custom"),
+    (150, 16, 1, "ResNet34Custom"),
+    (300, 16, 1, "ResNet34Custom"),
+    (150, 32, 1, "ResNet34Custom"),
+    (300, 32, 1, "ResNet34Custom"),
+
+    (150, 8, 1, "EfficientNetB0Custom"),  # EfficientNetB0 - Nagyon lassú tanulás, de jobb pontosság
+    (300, 8, 1, "EfficientNetB0Custom"),
+    (150, 16, 1, "EfficientNetB0Custom"),
+    (300, 16, 1, "EfficientNetB0Custom"),
+    (150, 32, 1, "EfficientNetB0Custom"),
+    (300, 32, 1, "EfficientNetB0Custom"),
+
+    (150, 8, 1, "SwinTransformerCustom"),  # Swin Transformer - Picsogás a memóriaigény miatt
+    (300, 8, 1, "SwinTransformerCustom"),
+    (150, 16, 1, "SwinTransformerCustom"),
+    (300, 16, 1, "SwinTransformerCustom"),
+    (150, 32, 1, "SwinTransformerCustom"),
+    (300, 32, 1, "SwinTransformerCustom"),
+
+    (150, 8, 1, "ConvNeXtCustom"),  # ConvNeXt - Lassú, és nem hoz jó eredményeket (Logban rögzítve)
+    (300, 8, 1, "ConvNeXtCustom"),
+    (150, 16, 1, "ConvNeXtCustom"),
+    (300, 16, 1, "ConvNeXtCustom"),
+    (150, 32, 1, "ConvNeXtCustom"),
+    (300, 32, 1, "ConvNeXtCustom"),
+
+    (150, 8, 1, "AlexNet"),  # AlexNet - Gyors, de elavult
+    (300, 8, 1, "AlexNet"),
+    (150, 16, 1, "AlexNet"),
+    (300, 16, 1, "AlexNet"),
+    (150, 32, 1, "AlexNet"),
+    (300, 32, 1, "AlexNet"),
 ]
 
 validation_ratio   = 0.05        # 0.0 -> nincs validáció   0.1 -> 10%
