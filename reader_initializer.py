@@ -4,16 +4,15 @@ import glob
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.image as mpimg
 from skimage.transform import resize
 import torch
 from skimage.io import imread
 
+#                   train_f,         valid_f,        test_f     all_label      0.1             True / False
+def initialize_data(train_folder, validation_folder, test_folder, label_file, validation_ratio, kerekitsen_labeleket):
+    # initialize_data("./augmentation", "validation_data", "./test_data", "./data_labels_train.csv", 0.1, True)
 
-  #                   train_f,         valid_f,        test_f     all_label      0.1             True / False
-def initialize_data(train_folder, validation_folder, test_folder, label_file,validation_ratio,kerekitsen_labeleket):
     logging.info(f"initialize_data() -----------------------------------")
-
 
     seed = 1234
     np.random.seed(seed)
@@ -23,6 +22,10 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file,val
     train_image_files = glob.glob(f"{train_folder}/*.png")
     validation_image_files = glob.glob(f"{validation_folder}/*.png")
     test_image_files = glob.glob(f"{test_folder}/*.png")
+
+    # logging.info(f"Train folder contains {len(train_image_files)} images.")
+    # logging.info(f"Validation folder contains {len(validation_image_files)} images.")
+    # logging.info(f"Test folder contains {len(test_image_files)} images.")
 
     # CSV fájl beolvasás
     df = pd.read_csv(label_file)
@@ -56,7 +59,7 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file,val
                             img = resize(img, (128, 128), anti_aliasing=True)
                         img = np.expand_dims(img, axis=-1)
                         data_dict[id_part][type_part] = img
-
+        # logging.info(f"{set_name}: Processed {len(data_dict)} unique groups.")
 
     process_images(train_image_files, train_data_dict, "Train")
     if validation_ratio != 0:
@@ -72,6 +75,8 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file,val
                 image_stack = np.concatenate([img_types['amp'], img_types['mask'], img_types['phase']], axis=-1)
                 image_list.append(image_stack)
                 image_ids.append(id_key)
+            else:
+                logging.warning(f"{set_name}: Missing images for ID {id_key}: {img_types}")
         return image_list, image_ids
 
     train_image_list, train_image_ids = convert_to_arrays(train_data_dict, "Train")
@@ -80,9 +85,9 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file,val
     test_image_list, test_image_ids = convert_to_arrays(test_data_dict, "Test")
 
     # Összegző kiíratás
-    logging.info(f"Train set: {len(train_image_list)} images, {len(train_image_ids)} IDs.")
-    logging.info(f"Validation set: {len(validation_image_list)} images, {len(validation_image_ids)} IDs.")
-    logging.info(f"Test set: {len(test_image_list)} images, {len(test_image_ids)} IDs.")
+    logging.info(f"Train set:      {len(train_image_list)*3} images, {len(train_image_ids)} group.")
+    logging.info(f"Validation set: {len(validation_image_list)*3}  images, {len(validation_image_ids)} group.")
+    logging.info(f"Test set:       {len(test_image_list)*3}  images, {len(test_image_ids)} group.")
 
     if validation_ratio == 0:
         validation_image_list = []

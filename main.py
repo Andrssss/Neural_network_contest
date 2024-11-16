@@ -5,7 +5,7 @@
 
 validation_ratio     = 0.1   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
 hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
-Augmentációs_szám    = 5
+Augmentation_number    = 5
 kerekitsen_labeleket = False
 
 
@@ -62,34 +62,47 @@ setup_logger()
 logging.info(f"Validation_ratio : {validation_ratio}")
 # DATA AUGMENTATION ------------------------------------- vad verzió
 source_folder = "./train_data"
-output_dir = "./augmentation"
+output_dir = "./train_data_Augmented+original"
 original_csv_file = label_file = "./data_labels_train.csv"
-output_label_file = './data_labels_transformed.csv'
 test_folder = "./test_data"
 train_folder = "train_data_2"
 validation_folder = "validation_data"
-train_csv_path = "data_labels_train_2.csv"
-validation_csv_path = './validation_data.csv'
+
+def ensure_folder_and_process(folder_path, callback):
+    """
+    Ellenőrzi, hogy a mappa létezik-e és nem üres.
+    Ha nem létezik vagy üres, létrehozza és meghívja a callback függvényt.
+    """
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"A mappa létrehozva: {folder_path}")
+        callback()
+    elif not os.listdir(folder_path):  # Mappa létezik, de üres
+        print(f"A mappa létezik, de üres: {folder_path}")
+        callback()
 
 def process_and_augment_data():
     from transform_2 import process_data
-    process_data(source_folder, train_folder, validation_folder, original_csv_file, train_csv_path, validation_csv_path,validation_ratio)
+    # Szétválasztja az eredeti képeket, train és validációs mappába
+    process_data(source_folder, train_folder, validation_folder, validation_ratio)
     from transform import augment_and_save_images
-    augment_and_save_images(train_folder, output_dir, train_csv_path, output_label_file, num_augments=Augmentációs_szám)
+    # A széválasztott adatok közűl a train adatokat fogja Augmentálni.
+    augment_and_save_images(train_folder, output_dir, num_augments=Augmentation_number)
 
 if hozzon_letre_uj_augmentalt_fileokat_e :
     process_and_augment_data()
 
-# Fileok beolvasása -------------------------------------
-if not os.path.exists(validation_folder): # Ha a mappa nem létezik, létrehozzuk
-    os.makedirs(validation_folder)
-    print(f"A mappa létrehozva: {validation_folder}")
-    process_and_augment_data()
-elif not os.listdir(validation_folder):     # Ha a mappa létezik, de üres, meghívjuk a callback függvényt
-    print(f"A mappa létezik, de üres: {validation_folder}")
-    process_and_augment_data()
+# Mappák ellenőrzése és a callback meghívása, ha szükséges
+ensure_folder_and_process(output_dir, process_and_augment_data)
+ensure_folder_and_process(train_folder, process_and_augment_data)
+ensure_folder_and_process(validation_folder, process_and_augment_data)
 
+
+
+
+# Fileok beolvasása -------------------------------------
 from reader_initializer import initialize_data
+# ö megkapja a :  initialize_data("./augmentation", "validation_data", "./test_data", "./data_labels_train.csv", 0.1, True) és ezekből csinál tenszort
 train_image_list, train_image_ids, validate_image_list, validate_image_ids, test_image_list, test_image_ids, data_array = initialize_data(output_dir,validation_folder,test_folder,label_file,validation_ratio,kerekitsen_labeleket)
 
 
