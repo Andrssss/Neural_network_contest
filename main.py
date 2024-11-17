@@ -275,7 +275,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
         # todo - ez mi a faszom, 21 kategória kell nem 4000
         num_classes = len(np.unique(data_array[:, 1]))
-
+        logging.info(f" num_classes = {num_classes}")
 
         if model_neve == "EfficientNetB0Custom":
 
@@ -300,7 +300,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
             #criterion = nn.CrossEntropyLoss()
             from torch.nn.functional import cross_entropy
-            logging.info(f" model.parameters() = {model.parameters()}")
+
 
 
             def focal_loss(inputs, targets, alpha=0.5, gamma=1.5):
