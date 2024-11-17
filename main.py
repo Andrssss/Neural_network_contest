@@ -4,19 +4,18 @@
 
 
 validation_ratio     = 0.1   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
-hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
-Augmentation_number    = 2
+hozzon_letre_uj_augmentalt_fileokat_e = True   # külön is futtatható
+Augmentation_number    = 3
 kerekitsen_labeleket = True
 
 
 
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
-    (100, 8, 1, "MobileNetV2Custom"),
+    # (100, 8, 1, "MobileNetV2Custom"),
     (100, 16, 1, "MobileNetV2Custom"),
     (100, 32, 1, "MobileNetV2Custom"),
-    (100, 64, 1, "MobileNetV2Custom"),
-    (100, 128, 1, "MobileNetV2Custom"),
+
 ]
 
 
@@ -285,11 +284,15 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         num_classes = len(np.unique(data_array[:, 1]))
         logging.info(f" num_classes = {num_classes}")
 
+        best_val_accuracy = 0.0
+        default_lr = 0.005
+
         if model_neve == "EfficientNetB0Custom":
 
             model = EfficientNetB0Custom(num_classes=num_classes)
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
+            original_lr = 0.001
             scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
             criterion = nn.CrossEntropyLoss()  # Regresszióhoz megfelelő
 
@@ -299,18 +302,18 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
             # Egyben kell tesztelni !!!!!!!!!!!!!!!!!!!!
             optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
-                                    # patience értékét 10-re, hogy több időt adj a modellnek a konvergálásra.
-            scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
+            original_lr = 0.005
+ #           from torch.optim.lr_scheduler import CosineAnnealingLR
+#            scheduler = CosineAnnealingLR(optimizer, T_max=50)  # 50 epoch után csökkentés
+            from torch.optim.lr_scheduler import ReduceLROnPlateau
+            scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
 
-            # EZT IS KI KELL PRÓBÁLNI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            #from torch.optim.lr_scheduler import CyclicLR
-            #scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=2000, mode='triangular')
+            # VAGY
+            # from torch.optim.lr_scheduler import CyclicLR
+            # scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular')
 
-            #criterion = nn.CrossEntropyLoss()
+
             from torch.nn.functional import cross_entropy
-
-
-
             def focal_loss(inputs, targets, alpha=0.5, gamma=1.5):
                 ce_loss = cross_entropy(inputs, targets, reduction='none')
                 pt = torch.exp(-ce_loss)
@@ -318,7 +321,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                 return focal_loss.mean()
             criterion = focal_loss
             #criterion = nn.CrossEntropyLoss() # EREDETI
-
 
 
 
@@ -385,8 +387,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         train_loss /= len(train_loader)
         if train_loss < t_loss_min:  t_loss_min = train_loss
         # Log  Current Learning Rate
-        # current_lr = optimizer.param_groups[0]['lr']
-        current_lr = scheduler.get_last_lr()[0]
+        current_lr = optimizer.param_groups[0]['lr']
+        # current_lr = scheduler.get_last_lr()[0]   ----> EZ LEHET GOND
 
 
         # Validation evaluation ----------------------------------------------------
@@ -445,10 +447,10 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         if max_acc < val_accuracy: max_acc = val_accuracy
 
 
-        if current_lr <= 0.0001 and cur_acc <= 0.5:
-            early_stopping_counter = 0
-            logging.info("LR = 0.")
-            break
+        #if current_lr <= 0.0001 and cur_acc <= 0.5:
+        #    early_stopping_counter = 0
+        #    logging.info("LR = 0.")
+        #    break
 
         # Early stopping check
         if val_loss < best_val_loss:
@@ -466,6 +468,20 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             elif early_stopping_counter > patience:
                 logging.info("Early stopping triggered.")
                 break
+
+        if val_accuracy > best_val_accuracy: # TESZTELÉS ALATT
+            best_val_accuracy = val_accuracy
+            if val_accuracy > 0.7 and current_lr > 1e-4:  # Csak akkor csökkentsük, ha az LR még magasabb
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = 1e-4  # Csökkentett tanulási ráta
+                print("Tanulási ráta csökkentve finomhangoláshoz: 1e-4")
+
+            # Ha az accuracy leesik és az LR-t korábban csökkentettük
+        elif val_accuracy < best_val_accuracy - 0.05:
+            if current_lr < default_lr:  # Csak akkor növeld, ha az LR csökkentett volt
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = default_lr  # Visszaállítja az eredeti tanulási rátát
+                print(f"Val_accuracy csökkent, tanulási ráta visszaállítva: {default_lr}")
 
 
     # Loggolás, mentés és egyéb műveletek
