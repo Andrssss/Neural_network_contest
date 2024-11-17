@@ -3,19 +3,18 @@
 # %tensorboard --logdir lightning_logs/
 
 
-validation_ratio     = 0.1   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
-hozzon_letre_uj_augmentalt_fileokat_e = True   # külön is futtatható
-Augmentation_number    = 3
+validation_ratio     = 0.05   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
+hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
+Augmentation_number    = 2
 kerekitsen_labeleket = True
 
 
 
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
-    # (100, 8, 1, "MobileNetV2Custom"),
-    (100, 16, 1, "MobileNetV2Custom"),
-    (100, 32, 1, "MobileNetV2Custom"),
-
+(100, 16, 1, "MobileNetV2Custom"),
+(100, 32, 1, "MobileNetV2Custom"),
+(100, 64, 1, "MobileNetV2Custom"),
 ]
 
 
@@ -32,8 +31,44 @@ configurations = [
 # AlexNet               - megnezem mennyire pontos
 
 
-# ----------------------------------------------------------------------------------------  DATA AUGMENTATION
+# ----------------------------------------------------------------------------------------  EDDIG LEGJOBBAK
+"""  15 %
+        
+validation_ratio     = 0.05   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
+hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
+Augmentation_number    = 2
+kerekitsen_labeleket = True
 
+        (100, 16, 1, "MobileNetV2Custom"),  
+
+        elif model_neve == "MobileNetV2Custom":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+            logging.info("scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+"""
 
 
 
@@ -256,7 +291,7 @@ max_acc = 0
 val_accuracy = 0.0
 
 # EARLY STOPPING
-patience = 999999  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
+patience = 20  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
 best_val_loss = float('inf')  # Legjobb validációs veszteség
 early_stopping_counter = 0  # Megszakítás számláló
 
@@ -285,44 +320,16 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         logging.info(f" num_classes = {num_classes}")
 
         best_val_accuracy = 0.0
-        default_lr = 0.005
+
 
         if model_neve == "EfficientNetB0Custom":
 
             model = EfficientNetB0Custom(num_classes=num_classes)
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
-            original_lr = 0.001
+            default_lr = 0.001
             scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
             criterion = nn.CrossEntropyLoss()  # Regresszióhoz megfelelő
-
-        elif model_neve == "MobileNetV2Custom": # Epoch : 0–50 , Batch Size : 32 vagy 64
-            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
-            model = model.to(device)
-
-            # Egyben kell tesztelni !!!!!!!!!!!!!!!!!!!!
-            optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
-            original_lr = 0.005
- #           from torch.optim.lr_scheduler import CosineAnnealingLR
-#            scheduler = CosineAnnealingLR(optimizer, T_max=50)  # 50 epoch után csökkentés
-            from torch.optim.lr_scheduler import ReduceLROnPlateau
-            scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
-
-            # VAGY
-            # from torch.optim.lr_scheduler import CyclicLR
-            # scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular')
-
-
-            from torch.nn.functional import cross_entropy
-            def focal_loss(inputs, targets, alpha=0.5, gamma=1.5):
-                ce_loss = cross_entropy(inputs, targets, reduction='none')
-                pt = torch.exp(-ce_loss)
-                focal_loss = alpha * (1 - pt) ** gamma * ce_loss
-                return focal_loss.mean()
-            criterion = focal_loss
-            #criterion = nn.CrossEntropyLoss() # EREDETI
-
-
 
         elif model_neve == "SwinTransformerCustom":
             model = SwinTransformerCustom(num_classes=num_classes)
@@ -353,6 +360,39 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-5)
 
             criterion = nn.CrossEntropyLoss()
+
+        elif model_neve == "MobileNetV2Custom":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+
+            # Learning rate ütemező (cosine annealing)
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            # scheduler = CosineAnnealingLR(optimizer, T_max=50)
+            from torch.optim.lr_scheduler import CyclicLR
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+            logging.info("scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+
         else:
             raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
 
@@ -362,8 +402,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
 
         output_file = 'log.csv'
-        with open(output_file, mode='a') as file:
-            file.write('\n')
+
 
     logging.info(f" [{start_epoch} - {num_epochs}] - {model_neve} - B={train_batch_size}")
 
@@ -379,7 +418,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             loss.backward()
 
             # Gradiens vágás  ----> EZ LEHET, HOGY NAGYON HASZNOS
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)   # ------>UTÁNA KELL NÉZNI
 
             optimizer.step()
             train_loss += loss.item()
@@ -387,8 +426,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         train_loss /= len(train_loader)
         if train_loss < t_loss_min:  t_loss_min = train_loss
         # Log  Current Learning Rate
-        current_lr = optimizer.param_groups[0]['lr']
-        # current_lr = scheduler.get_last_lr()[0]   ----> EZ LEHET GOND
+        current_lr = scheduler.get_last_lr()[0]
 
 
         # Validation evaluation ----------------------------------------------------
@@ -438,8 +476,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
 
-            # scheduler.step()
-            scheduler.step(val_loss)
+            scheduler.step()
+            # scheduler.step(val_loss)
 
         else:
             logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, LR: {current_lr:.6f}")
@@ -469,19 +507,17 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                 logging.info("Early stopping triggered.")
                 break
 
-        if val_accuracy > best_val_accuracy: # TESZTELÉS ALATT
-            best_val_accuracy = val_accuracy
-            if val_accuracy > 0.7 and current_lr > 1e-4:  # Csak akkor csökkentsük, ha az LR még magasabb
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = 1e-4  # Csökkentett tanulási ráta
-                print("Tanulási ráta csökkentve finomhangoláshoz: 1e-4")
-
-            # Ha az accuracy leesik és az LR-t korábban csökkentettük
+        if val_accuracy > 0.7 and current_lr > 1e-4:
+            new_lr = max(current_lr * 0.5, 1e-4)  # Fokozatos csökkentés
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = new_lr
+            print(f"Tanulási ráta csökkentve finomhangoláshoz: {new_lr}")
         elif val_accuracy < best_val_accuracy - 0.05:
             if current_lr < default_lr:  # Csak akkor növeld, ha az LR csökkentett volt
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = default_lr  # Visszaállítja az eredeti tanulási rátát
-                print(f"Val_accuracy csökkent, tanulási ráta visszaállítva: {default_lr}")
+                print(f"\r  LR <-- {default_lr}")
+
 
 
     # Loggolás, mentés és egyéb műveletek
@@ -494,7 +530,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         writer.writerow([model_neve, num_epochs, train_batch_size, cur_acc])  # Modell név is bekerül
 
     # Modell értékelése és kiiratás
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,cur_acc)
-    evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
+    if val_accuracy  > 0.2 :
+        evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,cur_acc)
+        evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
