@@ -12,8 +12,8 @@ kerekitsen_labeleket = True
 
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
-(100, 8, 1, "MobileNetV2Custom"),
-(100, 16, 1, "MobileNetV2Custom"),
+    (100, 8, 1, "MobileNetV2Custom"),
+    (100, 16, 1, "MobileNetV2Custom"),
     (100, 32, 1, "MobileNetV2Custom"),
     (100, 64, 1, "MobileNetV2Custom"),
     (100, 128, 1, "MobileNetV2Custom"),
@@ -187,15 +187,23 @@ else :
 # ----------------------------------------------------------------------------------------------------------------------
 # erre azért van szükség, mert CrossEntrophy 0-vmennyi számokat vár
 
+if kerekitsen_labeleket:
 
-logging.info(f"Eredeti címke: {data_array[:, 1]}")
-unique_labels  = np.unique(data_array[:, 1])  # Eredeti címkék
-label_map      = {label: idx for idx, label in enumerate(unique_labels)}  # Mappeljük 0-tól kezdve
-mapped_labels  = np.array([label_map[label] for label in data_array[:, 1]])
-# data_array címkék frissítése a mapped_labels segítségével
-data_array[:, 1] = mapped_labels
-logging.info(f"Átalakított címke: {data_array[:, 1]}")
 
+
+    logging.info(f"Eredeti címke: {data_array[:, 1]}")
+    unique_labels = np.unique(data_array[:, 1])  # Eredeti egyedi címkék
+    label_map = {label: idx for idx, label in enumerate(unique_labels)}  # Leképezés 0-tól kezdve
+    mapped_labels = np.array([label_map[label] for label in data_array[:, 1]])  # Minden címke újrakódolva
+    data_array[:, 1] = mapped_labels  # Frissítés átalakított címkékkel
+    logging.info(f"Átalakított címke: {data_array[:, 1]}")
+else :
+    logging.info(f"Eredeti címke: {data_array[:, 1]}")
+    unique_labels = np.unique(data_array[:, 1])  # Eredeti címkék
+    label_map = {label: idx for idx, label in enumerate(unique_labels)}  # Mappeljük 0-tól kezdve
+    mapped_labels = np.array([label_map[label] for label in data_array[:, 1]])
+    data_array[:, 1] = mapped_labels
+    logging.info(f"Átalakított címke: {data_array[:, 1]}")
 
 
 
@@ -348,7 +356,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
 
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        print("using device:", device)
         model = model.to(dev)
         start_epoch = 0  # Újratöltés esetén a ciklus kezdőértéke
 
