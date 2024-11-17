@@ -67,7 +67,7 @@ def augment_and_save_images(input_dir, output_dir, num_augments=5):
 
             transform_type = random.choices(
                 ["Fixed Rotation", "Small Rotation with Offset"],
-                weights=[1/2, 1/2]
+                weights=[1,0]
             )[0]
 
             transform_stats[transform_type] += 1

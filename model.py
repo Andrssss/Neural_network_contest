@@ -1,15 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision.models import mobilenet_v2
-from torchvision.models import mobilenet_v2, MobileNet_V2_Weights, resnet34, efficientnet_b0
-from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
 from torchvision.models import resnet34, ResNet34_Weights
-from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
+from torchvision.models import efficientnet_b0
 from timm import create_model
-from torchvision import models
-from torchvision.models import MobileNet_V2_Weights
-import torchvision.models as models
+
 
 import torch.nn as nn
 from torchvision import models
@@ -74,7 +67,7 @@ class ConvNeXtCustom(nn.Module):
 
 
 class AlexNet(nn.Module):
-    def __init__(self, num_classes=21):
+    def __init__(self, num_classes):
         super(AlexNet, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),  # 64 szűrő, 11x11 méretű, stride=4

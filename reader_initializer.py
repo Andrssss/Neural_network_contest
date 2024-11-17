@@ -34,10 +34,18 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file, va
     # ------------------------------------ Kerekítés és tartomány korlátozás (opcionális)
     if kerekitsen_labeleket:
         df['defocus_label'] = np.clip(np.round(df['defocus_label']), -10, 10)
-    logging.info(df.head())
+        logging.info(df.head())
+        unique_values_in_range = df['defocus_label'].unique()
+        print(f"Különböző értékek száma: {unique_values_in_range}")
+        print(f"Különböző értékek száma: {len(unique_values_in_range)}")
+        data_array = df.to_numpy()
+    else :
+        logging.info(selected_data.head())
+        data_array = selected_data.to_numpy()
+
     # ------------------------------------------------------------------------------------
 
-    data_array = selected_data.to_numpy()
+
 
     # Tárolók az adatokhoz
     train_data_dict = {}

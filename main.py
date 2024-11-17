@@ -5,21 +5,18 @@
 
 validation_ratio     = 0.1   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
 hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
-Augmentation_number    = 5
-kerekitsen_labeleket = False
+Augmentation_number    = 2
+kerekitsen_labeleket = True
 
 
 
 # Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
-    (150, 8, 1, "MobileNetV2Custom"),
-    (300, 8, 1, "MobileNetV2Custom"),
-    (150, 16, 1, "MobileNetV2Custom"),
-    (300, 16, 1, "MobileNetV2Custom"),
-    (150, 32, 1, "MobileNetV2Custom"),
-    (300, 32, 1, "MobileNetV2Custom"),
-
-    (3000, 32, 1, "AlexNet"),
+(100, 8, 1, "MobileNetV2Custom"),
+(100, 16, 1, "MobileNetV2Custom"),
+    (100, 32, 1, "MobileNetV2Custom"),
+    (100, 64, 1, "MobileNetV2Custom"),
+    (100, 128, 1, "MobileNetV2Custom"),
 ]
 
 
@@ -34,7 +31,6 @@ configurations = [
 # SwinTransformerCustom - picsog
 # ConvNeXtCustom        - kurva lassú betanulás, meg jó szar is. Logban van mérés.
 # AlexNet               - megnezem mennyire pontos
-
 
 
 # ----------------------------------------------------------------------------------------  DATA AUGMENTATION
@@ -69,10 +65,6 @@ train_folder = "train_data_2"
 validation_folder = "validation_data"
 
 def ensure_folder_and_process(folder_path, callback):
-    """
-    Ellenőrzi, hogy a mappa létezik-e és nem üres.
-    Ha nem létezik vagy üres, létrehozza és meghívja a callback függvényt.
-    """
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         print(f"A mappa létrehozva: {folder_path}")
@@ -194,6 +186,8 @@ else :
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # erre azért van szükség, mert CrossEntrophy 0-vmennyi számokat vár
+
+
 logging.info(f"Eredeti címke: {data_array[:, 1]}")
 unique_labels  = np.unique(data_array[:, 1])  # Eredeti címkék
 label_map      = {label: idx for idx, label in enumerate(unique_labels)}  # Mappeljük 0-tól kezdve
@@ -226,11 +220,11 @@ def normalize_id(img_id):
 
 # Egyedi dataset osztály
 class CustomImageDataset(Dataset):
-    def __init__(self, images, image_ids, data_array, transform=None):
+    def __init__(self, images, image_ids, data_array_, transform=None):
         self.images = images
         self.image_ids = image_ids
         # Az ID-k normalizálása a data_dict létrehozásakor
-        self.data_dict = {normalize_id(row[0]): row[1] for row in data_array}
+        self.data_dict = {normalize_id(row[0]): row[1] for row in data_array_}
         self.transform = transform
 
     def __len__(self):
@@ -255,7 +249,7 @@ max_acc = 0
 val_accuracy = 0.0
 
 # EARLY STOPPING
-patience = 10  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
+patience = 999999  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
 best_val_loss = float('inf')  # Legjobb validációs veszteség
 early_stopping_counter = 0  # Megszakítás számláló
 
@@ -264,19 +258,18 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
     else:
+        best_val_loss = float('inf')
         early_stopping_counter = 0
         t_loss_min = 99
         max_acc = 0
         val_accuracy = 0.0
-        # Újrainicializáljuk az adatokat és a modellt
-        # dataset = CustomImageDataset(  images=train_image_tensors,  data_array=data_array, ids=train_image_ids, transform=transform_train)
-        dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array=data_array)
+        dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array_=data_array)
         train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
 
         # Validation dataset (if available)
         if validate_image_tensors is not None:
             #val_dataset = CustomImageDataset(images=validate_image_tensors, data_array=data_array, ids=validate_image_ids,   transform=transform_validate)
-            val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array=data_array)
+            val_dataset = CustomImageDataset(images=validate_image_tensors, image_ids=validate_image_ids,data_array_=data_array)
             val_loader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=False)
 
 
@@ -290,35 +283,42 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
             scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
-            criterion = nn.MSELoss()  # Regresszióhoz megfelelő
+            criterion = nn.CrossEntropyLoss()  # Regresszióhoz megfelelő
 
-        elif model_neve == "MobileNetV2Custom":
-
-            # 0–40 Epoch: A MobileNetV2 kisebb és gyorsabb modell, így gyorsabban konvergálhat. Érdemes 20-30 epochot kezdetben, majd figyelni a teljesítményt. Ha szükséges, lehet növelni akár 50 epochra is.
-            # Batch Size : 32 vagy 64: A MobileNetV2 hatékonysága miatt nagyobb batch size-t is kezelhet, így érdemes 32-vel vagy 64-gyel kezdeni, hogy stabilabb gradienseket érj el. (Ha memória problémák lépnek fel, akkor 16-ra csökkenthető.)
-            model = MobileNetV2Custom(num_classes=len(label_map))  # vagy az adott modellnek megfelelő
+        elif model_neve == "MobileNetV2Custom": # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
             model = model.to(device)
 
-            optimizer = optim.Adam(model.parameters(), lr=0.001)
-            # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # StepLR: 10 epochonként 0.1-es faktorral csökkenti a tanulási rátát. -> may 20%
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50) # CosineAnnealingLR: Ha 20–50 epocra tervezel, a cosine annealing finoman csökkenti a tanulási rátát.
-            criterion = nn.CrossEntropyLoss()
+            # Egyben kell tesztelni !!!!!!!!!!!!!!!!!!!!
+            optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
+                                    # patience értékét 10-re, hogy több időt adj a modellnek a konvergálásra.
+            scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
-            logging.info(f" scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50)")
-            logging.info(f" optimizer = optim.Adam(model.parameters(), lr=0.001)")
+            # EZT IS KI KELL PRÓBÁLNI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #from torch.optim.lr_scheduler import CyclicLR
+            #scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=2000, mode='triangular')
 
-        elif model_neve == "ResNet34Custom":
-            model = ResNet34Custom(num_classes=num_classes)
-            optimizer = optim.Adam(model.parameters(), lr=0.001)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-            criterion = nn.MSELoss()
+            #criterion = nn.CrossEntropyLoss()
+            from torch.nn.functional import cross_entropy
+            logging.info(f" model.parameters() = {model.parameters()}")
+
+
+            def focal_loss(inputs, targets, alpha=0.5, gamma=1.5):
+                ce_loss = cross_entropy(inputs, targets, reduction='none')
+                pt = torch.exp(-ce_loss)
+                focal_loss = alpha * (1 - pt) ** gamma * ce_loss
+                return focal_loss.mean()
+            criterion = focal_loss
+            #criterion = nn.CrossEntropyLoss() # EREDETI
+
+
+
 
         elif model_neve == "SwinTransformerCustom":
             model = SwinTransformerCustom(num_classes=num_classes)
             optimizer = optim.AdamW(model.parameters(), lr=0.0005)  # AdamW optimizer
             scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)  # Speciális LR csökkentés
-            criterion = nn.MSELoss()
+            criterion = nn.CrossEntropyLoss()
 
         elif model_neve == "ConvNeXtCustom":
             # Epochs -  20-40 : A ConvNeXt hálózat jól konvergálhat 20-40 epoch alatt, de ha a tanulás lassabb, akár 50 epochot is használhatsz.
@@ -330,17 +330,21 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             criterion = nn.CrossEntropyLoss(label_smoothing=0.1) # ezt kell változtatni, ha picsog
         elif model_neve == "AlexNet":
             from torchvision.models import alexnet  # AlexNet importálása
-
             # Modell inicializálása a megfelelő osztályok számával
             model = alexnet(num_classes=num_classes)
             optimizer = optim.Adam(model.parameters(), lr=0.001)  # Gyorsabb konvergálás érdekében
             # Alternatíva: optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1  )
+            criterion = nn.CrossEntropyLoss()
+
+        elif model_neve == "ResNet34Custom":
+            model = ResNet34Custom(num_classes=num_classes)
+            optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-4)
+            scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-5)
+
             criterion = nn.CrossEntropyLoss()
         else:
             raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
-
-
 
 
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -364,12 +368,15 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             outputs = model(train_images)
             loss = criterion(outputs, labels)
             loss.backward()
+
+            # Gradiens vágás  ----> EZ LEHET, HOGY NAGYON HASZNOS
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
             optimizer.step()
             train_loss += loss.item()
 
         train_loss /= len(train_loader)
         if train_loss < t_loss_min:  t_loss_min = train_loss
-        scheduler.step()
         # Log  Current Learning Rate
         # current_lr = optimizer.param_groups[0]['lr']
         current_lr = scheduler.get_last_lr()[0]
@@ -414,25 +421,32 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                     total_count += 1
 
                     results.append([test_ids, predicted_label, original_label])
-
             # Pontosság kiszámítása
             # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
             val_loss /= len(validate_image_ids)
             val_accuracy = correct_count / total_count
             logging.info(  f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}, Val loss: {val_loss:.4f}, LR: {current_lr:.6f}")
+
+
+
+            # scheduler.step()
+            scheduler.step(val_loss)
+
         else:
             logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, LR: {current_lr:.6f}")
         if cur_acc < val_accuracy: cur_acc = val_accuracy
         if max_acc < val_accuracy: max_acc = val_accuracy
 
 
+        if current_lr <= 0.0001 and cur_acc <= 0.5:
+            early_stopping_counter = 0
+            logging.info("LR = 0.")
+            break
+
         # Early stopping check
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             early_stopping_counter = 0
-            # Save model checkpoint to handle overfitting
-            # torch.save(model.state_dict(), 'best_model_checkpoint.pth') ----------> lehet vele menteni
-            # logging.info("Checkpoint saved.")
         else:
             early_stopping_counter += 1
             if early_stopping_counter == patience:
@@ -461,4 +475,3 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
-
