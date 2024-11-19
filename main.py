@@ -2,19 +2,100 @@
 # %load_ext tensorboard
 # %tensorboard --logdir lightning_logs/
 
-
+# validation_ratio     = 0.014 # -> 50 kép
 validation_ratio     = 0.05   # 0.1 -> 10%, ha ezen változtatni szeretnél, akkor az alatta lévőt tedd TRUE-ra, első körben
 hozzon_letre_uj_augmentalt_fileokat_e = False   # külön is futtatható
 Augmentation_number    = 2
 kerekitsen_labeleket = True
 
+patience = 50
 
-
-# Érdemes növekvősorrendbe rakni az olyan tanításokat, amiknél csak epoch külömböző.
 configurations = [
-(100, 16, 1, "MobileNetV2Custom"),
-(100, 32, 1, "MobileNetV2Custom"),
-(100, 64, 1, "MobileNetV2Custom"),
+(100, 16, 1, "MobileNetV2Custom_0",0.003),
+(100, 32, 1, "MobileNetV2Custom_0",0.001),
+(100, 64, 1, "MobileNetV2Custom_0",0.0005),
+(100, 128, 1, "MobileNetV2Custom_0",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_1",0.003),
+(100, 32, 1, "MobileNetV2Custom_1",0.001),
+(100, 64, 1, "MobileNetV2Custom_1",0.0005),
+(100, 128, 1, "MobileNetV2Custom_1",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_2",0.003),
+(100, 32, 1, "MobileNetV2Custom_2",0.001),
+(100, 64, 1, "MobileNetV2Custom_2",0.0005),
+(100, 128, 1, "MobileNetV2Custom_2",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_3",0.003),
+(100, 32, 1, "MobileNetV2Custom_3",0.001),
+(100, 64, 1, "MobileNetV2Custom_3",0.0005),
+(100, 128, 1, "MobileNetV2Custom_3",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_4",0.003),
+(100, 32, 1, "MobileNetV2Custom_4",0.001),
+(100, 64, 1, "MobileNetV2Custom_4",0.0005),
+(100, 128, 1, "MobileNetV2Custom_4",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_5",0.003),
+(100, 32, 1, "MobileNetV2Custom_5",0.001),
+(100, 64, 1, "MobileNetV2Custom_5",0.0005),
+(100, 128, 1, "MobileNetV2Custom_5",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_6",0.003),
+(100, 32, 1, "MobileNetV2Custom_6",0.001),
+(100, 64, 1, "MobileNetV2Custom_6",0.0005),
+(100, 128, 1, "MobileNetV2Custom_6",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_7",0.003),
+(100, 32, 1, "MobileNetV2Custom_7",0.001),
+(100, 64, 1, "MobileNetV2Custom_7",0.0005),
+(100, 128, 1, "MobileNetV2Custom_7",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_8",0.003),
+(100, 32, 1, "MobileNetV2Custom_8",0.001),
+(100, 64, 1, "MobileNetV2Custom_8",0.0005),
+(100, 128, 1, "MobileNetV2Custom_8",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_9",0.003),
+(100, 32, 1, "MobileNetV2Custom_9",0.001),
+(100, 64, 1, "MobileNetV2Custom_9",0.0005),
+(100, 128, 1, "MobileNetV2Custom_9",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_10",0.003),
+(100, 32, 1, "MobileNetV2Custom_10",0.001),
+(100, 64, 1, "MobileNetV2Custom_10",0.0005),
+(100, 128, 1, "MobileNetV2Custom_10",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_11",0.003),
+(100, 32, 1, "MobileNetV2Custom_11",0.001),
+(100, 64, 1, "MobileNetV2Custom_11",0.0005),
+(100, 128, 1, "MobileNetV2Custom_11",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_12",0.003),
+(100, 32, 1, "MobileNetV2Custom_12",0.001),
+(100, 64, 1, "MobileNetV2Custom_12",0.0005),
+(100, 128, 1, "MobileNetV2Custom_12",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_13",0.003),
+(100, 32, 1, "MobileNetV2Custom_13",0.001),
+(100, 64, 1, "MobileNetV2Custom_13",0.0005),
+(100, 128, 1, "MobileNetV2Custom_13",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_14",0.003),
+(100, 32, 1, "MobileNetV2Custom_14",0.001),
+(100, 64, 1, "MobileNetV2Custom_14",0.0005),
+(100, 128, 1, "MobileNetV2Custom_14",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_15",0.003),
+(100, 32, 1, "MobileNetV2Custom_15",0.001),
+(100, 64, 1, "MobileNetV2Custom_15",0.0005),
+(100, 128, 1, "MobileNetV2Custom_15",0.0001),
+
+(100, 16, 1, "MobileNetV2Custom_16",0.003),
+(100, 32, 1, "MobileNetV2Custom_16",0.001),
+(100, 64, 1, "MobileNetV2Custom_16",0.0005),
+(100, 128, 1, "MobileNetV2Custom_16",0.0001)
+
 ]
 
 
@@ -24,11 +105,10 @@ configurations = [
 # model_neve       = "MobileNetV2Custom"
 
 # MobileNetV2Custom     - gyors, de 20% pontosság max,eddig
-# ResNet34Custom        -
-# EfficientNetB0Custom  - kurva lassú betanulás ( laptopomon esélytelen )
-# SwinTransformerCustom - picsog
-# ConvNeXtCustom        - kurva lassú betanulás, meg jó szar is. Logban van mérés.
-# AlexNet               - megnezem mennyire pontos
+# AdvancedMobileNetV2        -
+
+
+
 
 
 # ----------------------------------------------------------------------------------------  EDDIG LEGJOBBAK
@@ -84,12 +164,15 @@ import os
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from model import MobileNetV2Custom, ResNet34Custom, EfficientNetB0Custom, SwinTransformerCustom, ConvNeXtCustom
+from model import MobileNetV2Custom, AdvancedMobileNetV2
 from evaluate_and_export import evaluate_model
+from torch.optim.lr_scheduler import CosineAnnealingLR
+import torch.nn.functional as F
 # Logger létrehozás -------------------------------------
 from logger import setup_logger
 setup_logger()
 logging.info(f"Validation_ratio : {validation_ratio}")
+logging.info(f"Augmentation_number : {Augmentation_number}")
 # DATA AUGMENTATION ------------------------------------- vad verzió
 source_folder = "./train_data"
 output_dir = "./train_data_Augmented+original"
@@ -287,15 +370,15 @@ class CustomImageDataset(Dataset):
 
 previous_config = None
 t_loss_min = 99
-max_acc = 0
+max_acc = 0.2
 val_accuracy = 0.0
 
 # EARLY STOPPING
-patience = 20  # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
+ # Hány epoch után álljon le, ha nincs javulás - GPT - 5 re állította
 best_val_loss = float('inf')  # Legjobb validációs veszteség
 early_stopping_counter = 0  # Megszakítás számláló
 
-for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
+for num_epochs, train_batch_size, fel_le_kerekit, model_neve,default_lr in configurations:
     cur_acc = 0.0
     if (previous_config != None and num_epochs > previous_config[0] and train_batch_size == previous_config[1] and fel_le_kerekit == previous_config[2] and model_neve == previous_config[3]):
         start_epoch = previous_config[0]  # Folytatás az aktuális num_epochs értéktől
@@ -303,7 +386,7 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
         best_val_loss = float('inf')
         early_stopping_counter = 0
         t_loss_min = 99
-        max_acc = 0
+        max_acc = 0.2
         val_accuracy = 0.0
         dataset = CustomImageDataset(images=train_image_tensors, image_ids=train_image_ids, data_array_=data_array)
         train_loader = DataLoader(dataset, batch_size=train_batch_size, shuffle=True)
@@ -321,63 +404,22 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
 
         best_val_accuracy = 0.0
 
-
-        if model_neve == "EfficientNetB0Custom":
-
-            model = EfficientNetB0Custom(num_classes=num_classes)
-            model = model.to(device)
-            optimizer = optim.Adam(model.parameters(), lr=0.001)  # Adam optimizer
-            default_lr = 0.001
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)  # Learning rate scheduler
-            criterion = nn.CrossEntropyLoss()  # Regresszióhoz megfelelő
-
-        elif model_neve == "SwinTransformerCustom":
-            model = SwinTransformerCustom(num_classes=num_classes)
-            optimizer = optim.AdamW(model.parameters(), lr=0.0005)  # AdamW optimizer
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)  # Speciális LR csökkentés
-            criterion = nn.CrossEntropyLoss()
-
-        elif model_neve == "ConvNeXtCustom":
-            # Epochs -  20-40 : A ConvNeXt hálózat jól konvergálhat 20-40 epoch alatt, de ha a tanulás lassabb, akár 50 epochot is használhatsz.
-            # Batch Size - 32-64
-            model = ConvNeXtCustom(num_classes=num_classes)
-            optimizer = optim.AdamW(model.parameters(), lr=0.0005)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-7) # Ha 20-40 epochig tervezed az edzést
-            #scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
-            criterion = nn.CrossEntropyLoss(label_smoothing=0.1) # ezt kell változtatni, ha picsog
-        elif model_neve == "AlexNet":
-            from torchvision.models import alexnet  # AlexNet importálása
-            # Modell inicializálása a megfelelő osztályok számával
-            model = alexnet(num_classes=num_classes)
-            optimizer = optim.Adam(model.parameters(), lr=0.001)  # Gyorsabb konvergálás érdekében
-            # Alternatíva: optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1  )
-            criterion = nn.CrossEntropyLoss()
-
-        elif model_neve == "ResNet34Custom":
-            model = ResNet34Custom(num_classes=num_classes)
-            optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-4)
-            scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-5)
-
-            criterion = nn.CrossEntropyLoss()
-
-        elif model_neve == "MobileNetV2Custom":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+        if model_neve == "MobileNetV2Custom_0":  # Epoch : 0–50 , Batch Size : 32 vagy 64
             model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
             model = model.to(device)
-
             default_lr = 0.001
             optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
             logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
-
-            # Learning rate ütemező (cosine annealing)
             from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
-            # scheduler = CosineAnnealingLR(optimizer, T_max=50)
             from torch.optim.lr_scheduler import CyclicLR
+
             scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
-            logging.info("scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
 
             # CrossEntropy loss label smoothing-gel
             import torch.nn.functional as F
+
 
             def label_smoothing_loss(inputs, targets, smoothing=0.1):
                 confidence = 1.0 - smoothing
@@ -388,13 +430,529 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
                 loss = confidence * nll_loss + smoothing * smooth_loss
                 return loss.mean()
 
+
             criterion = label_smoothing_loss
             # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
             logging.info("criterion = label_smoothing_loss")
 
 
-        else:
-            raise ValueError(f"Hibás/nem létező modell név: {model_neve}")
+
+
+        elif model_neve == "MobileNetV2Custom_1":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.0008
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.0008, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+            logging.info("scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+
+
+
+
+
+
+        elif model_neve == "MobileNetV2Custom_2":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.0009
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.0009, weight_decay=1e-4)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+
+
+
+        elif model_neve == "MobileNetV2Custom_3":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.0007
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.0007, weight_decay=1e-4)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+        elif model_neve == "MobileNetV2Custom_4":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.001
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=20, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=20, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+
+
+
+        elif model_neve == "MobileNetV2Custom_5":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.0007
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.0007, weight_decay=1e-4)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=30, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=30, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+
+        elif model_neve == "MobileNetV2Custom_6":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.0007
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.0007, weight_decay=1e-4)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=40, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=40, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+
+        elif model_neve == "MobileNetV2Custom_7":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.001
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-3)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-3)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+        elif model_neve == "MobileNetV2Custom_8":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+                model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+                model = model.to(device)
+                default_lr = 0.001
+                optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-5)
+                logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)")
+                from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+                from torch.optim.lr_scheduler import CyclicLR
+
+                scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')
+                logging.info(
+                    "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+                # CrossEntropy loss label smoothing-gel
+                import torch.nn.functional as F
+
+
+                def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                    confidence = 1.0 - smoothing
+                    log_probs = F.log_softmax(inputs, dim=-1)
+                    nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                    nll_loss = nll_loss.squeeze(1)
+                    smooth_loss = -log_probs.mean(dim=-1)
+                    loss = confidence * nll_loss + smoothing * smooth_loss
+                    return loss.mean()
+
+
+                criterion = label_smoothing_loss
+                # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+                logging.info("criterion = label_smoothing_loss")
+
+
+
+
+        elif model_neve == "MobileNetV2Custom_9":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-2, step_size_up=10, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-2, step_size_up=10, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+
+        elif model_neve == "MobileNetV2Custom_10":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=10, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=10, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+
+        elif model_neve == "MobileNetV2Custom_11":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=100, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=100, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+        elif model_neve == "MobileNetV2Custom_12":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=50, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=50, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+        elif model_neve == "MobileNetV2Custom_13":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=150, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=150, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            criterion = label_smoothing_loss
+            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
+
+        elif model_neve == "MobileNetV2Custom_14":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=100, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=100, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            # criterion = label_smoothing_loss
+            criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = nn.CrossEntropyLoss(label_smoothing=0.1)")
+
+        elif model_neve == "MobileNetV2Custom_15":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=50, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=50, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            #criterion = label_smoothing_loss
+            criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = nn.CrossEntropyLoss(label_smoothing=0.1)")
+
+        elif model_neve == "MobileNetV2Custom_16":  # Epoch : 0–50 , Batch Size : 32 vagy 64
+            model = MobileNetV2Custom(num_classes=len(label_map))  # Ha támogatott
+            model = model.to(device)
+            default_lr = 0.001
+            optimizer = optim.Adam(model.parameters(), lr=default_lr, weight_decay=1e-4)
+            logging.info("optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)")
+            from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+            from torch.optim.lr_scheduler import CyclicLR
+
+            scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=150, mode='triangular2')
+            logging.info(
+                "scheduler = CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-1, step_size_up=150, mode='triangular2')")
+
+            # CrossEntropy loss label smoothing-gel
+            import torch.nn.functional as F
+
+
+            def label_smoothing_loss(inputs, targets, smoothing=0.1):
+                confidence = 1.0 - smoothing
+                log_probs = F.log_softmax(inputs, dim=-1)
+                nll_loss = -log_probs.gather(dim=-1, index=targets.unsqueeze(1))
+                nll_loss = nll_loss.squeeze(1)
+                smooth_loss = -log_probs.mean(dim=-1)
+                loss = confidence * nll_loss + smoothing * smooth_loss
+                return loss.mean()
+
+
+            # criterion = label_smoothing_loss
+            criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+            logging.info("criterion = label_smoothing_loss")
+
 
 
         dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -410,6 +968,9 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
     for epoch in range(start_epoch, num_epochs):
         model.train()
         train_loss = 0.0
+        correct_train = 0  # Helyes előrejelzések száma a train adatokon
+        total_train = 0  # Teljes train minta száma
+
         for train_images, labels in train_loader:
             train_images, labels = train_images.to(device), labels.to(device).long()
             optimizer.zero_grad()
@@ -417,73 +978,70 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             loss = criterion(outputs, labels)
             loss.backward()
 
-            # Gradiens vágás  ----> EZ LEHET, HOGY NAGYON HASZNOS
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)   # ------>UTÁNA KELL NÉZNI
+            # Gradiens vágás
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
             optimizer.step()
             train_loss += loss.item()
 
+            # Pontosság kiszámítása a tanítás során
+            _, predicted = torch.max(outputs, 1)
+            total_train += labels.size(0)
+            correct_train += predicted.eq(labels).sum().item()
+
         train_loss /= len(train_loader)
-        if train_loss < t_loss_min:  t_loss_min = train_loss
+        train_accuracy = 100. * correct_train / total_train  # Tanítási pontosság százalékban
+
+        if train_loss < t_loss_min:
+            t_loss_min = train_loss
+
         # Log  Current Learning Rate
         current_lr = scheduler.get_last_lr()[0]
 
-
-        # Validation evaluation ----------------------------------------------------
+        # Validációs kiértékelés
         if validate_image_tensors is not None:
-            model.eval()  # Váltás kiértékelési módba
-            results = []
-            reverse_label_map = {idx: label for label, idx in label_map.items()}  # Címkék visszafejtése
+            model.eval()
             val_loss = 0.0
-            correct_count = 0  # Egyezések számlálása
-            total_count = 0  # Összes validációs adat száma
+            correct_val = 0
+            total_val = 0
 
-            with torch.no_grad():  # Gradiensek nem szükségesek kiértékelés során
+            with torch.no_grad():
                 for test_images, test_ids in zip(validate_image_tensors, validate_image_ids):
                     test_images = test_images.unsqueeze(0).to(device)
-
                     outputs = model(test_images)
                     _, predicted = torch.max(outputs, 1)
-                    predicted_label = predicted
-                    #predicted_label = reverse_label_map[predicted.item()]
-                    #predicted_label = int(abs(float(predicted_label)))
-
-                    # Az eredeti címke kinyerése az ID alapján
-                    # original_label = reverse_label_map[data_array[data_array[:, 0] == test_ids, 1].item()]
-                    # original_label original_label = int(abs(float(original_label)))
 
                     original_label = data_array[data_array[:, 0] == test_ids, 1].item()
                     original_label_tensor = torch.tensor([original_label], dtype=torch.long).to(device)
-                    #
-                    # # Veszteség számítása a valós címkékkel
+
+                    # Veszteség számítása a valós címkékkel
                     loss = criterion(outputs, original_label_tensor)
                     val_loss += loss.item()
 
+                    # Pontosság ellenőrzése
+                    if predicted.item() == original_label:
+                        correct_val += 1
+                    total_val += 1
 
-                    # Összehasonlítás és számlálás
-                    predicted_label = predicted_label.item()
-                    # print(f"Predictions: {predicted_label} / Original: {original_label}")
-                    if predicted_label == original_label:
-                        correct_count += 1
-                    total_count += 1
-
-                    results.append([test_ids, predicted_label, original_label])
-            # Pontosság kiszámítása
-            # print(f"Correct Predictions: {original_label} / Total: {predicted_label}")
             val_loss /= len(validate_image_ids)
-            val_accuracy = correct_count / total_count
-            logging.info(  f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Accuracy: {val_accuracy:.4f}, Val loss: {val_loss:.4f}, LR: {current_lr:.6f}")
+            val_accuracy = 100. * correct_val / total_val  # Validációs pontosság százalékban
 
-
+            logging.info(
+                f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, "
+                f"Val Accuracy: {val_accuracy:.2f}%, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}")
 
             scheduler.step()
-            # scheduler.step(val_loss)
 
         else:
-            logging.info(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, LR: {current_lr:.6f}")
-        if cur_acc < val_accuracy: cur_acc = val_accuracy
-        if max_acc < val_accuracy: max_acc = val_accuracy
+            logging.info(
+                f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, "
+                f"LR: {current_lr:.6f}")
 
+        # Maximális pontosságok frissítése
+        if cur_acc < val_accuracy:
+            cur_acc = val_accuracy
+        if max_acc < val_accuracy:
+            max_acc = val_accuracy
 
         #if current_lr <= 0.0001 and cur_acc <= 0.5:
         #    early_stopping_counter = 0
@@ -499,8 +1057,8 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             if early_stopping_counter == patience:
                 logging.info("Early stopping triggered.")
                 # Modell értékelése és kiiratás
-                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size, val_accuracy, 0, model_neve, t_loss_min, cur_acc)
-                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size, val_accuracy, 1, model_neve, t_loss_min, cur_acc)
+                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, epoch + 1, train_batch_size, val_accuracy, 0, model_neve, t_loss_min, cur_acc)
+                evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, epoch + 1, train_batch_size, val_accuracy, 1, model_neve, t_loss_min, cur_acc)
                 previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
                 break
             elif early_stopping_counter > patience:
@@ -511,14 +1069,14 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             new_lr = max(current_lr * 0.5, 1e-4)  # Fokozatos csökkentés
             for param_group in optimizer.param_groups:
                 param_group['lr'] = new_lr
-            print(f"Tanulási ráta csökkentve finomhangoláshoz: {new_lr}")
         elif val_accuracy < best_val_accuracy - 0.05:
             if current_lr < default_lr:  # Csak akkor növeld, ha az LR csökkentett volt
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = default_lr  # Visszaállítja az eredeti tanulási rátát
-                print(f"\r  LR <-- {default_lr}")
-
-
+        if val_accuracy > 11:
+            evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min, cur_acc)
+            evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size, val_accuracy, 1, model_neve, t_loss_min, cur_acc)
+            # Modell értékelése és kiiratás
 
     # Loggolás, mentés és egyéb műveletek
     output_file = 'log.csv'
@@ -529,9 +1087,6 @@ for num_epochs, train_batch_size, fel_le_kerekit, model_neve in configurations:
             writer.writerow(['Model Name', 'Epochs', 'Batch Size', 'Validation Accuracy'])  # Fejléc
         writer.writerow([model_neve, num_epochs, train_batch_size, cur_acc])  # Modell név is bekerül
 
-    # Modell értékelése és kiiratás
-    if val_accuracy  > 0.2 :
-        evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 0, model_neve, t_loss_min,cur_acc)
-        evaluate_model(model, test_image_tensors, test_image_ids, label_map, dev, num_epochs, train_batch_size,val_accuracy, 1, model_neve, t_loss_min,cur_acc)
+
     # Előző epoch értékének frissítése
     previous_config = (num_epochs, train_batch_size, fel_le_kerekit, model_neve)
