@@ -1,7 +1,3 @@
-import torch
-from torchvision.models import resnet34, ResNet34_Weights
-from torchvision.models import efficientnet_b0
-from timm import create_model
 
 
 import torch.nn as nn
@@ -16,11 +12,21 @@ class MobileNetV2Custom(nn.Module):
         # MobileNetV2 inicializálása előre betanított súlyokkal
         self.mobilenet = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
 
-        # Utolsó osztályozó réteg lecserélése az osztályok számára
-        self.mobilenet.classifier[1] = nn.Linear(self.mobilenet.last_channel, num_classes)
+        # Dropout hozzáadása az osztályozó előtt
+        self.mobilenet.classifier = nn.Sequential(
+            #nn.Dropout(p=0.2),  # Dropout az overfitting ellen
+            nn.Linear(self.mobilenet.last_channel, 512),  # Első rejtett réteg
+            nn.ReLU(),  # Aktivációs függvény
+            #nn.Dropout(p=0.2),  # Dropout a rejtett réteg után
+            nn.Linear(512, 128),  # Második rejtett réteg
+            nn.ReLU(),
+            nn.Linear(128, 1)  # Kimeneti réteg regresszióhoz
+        )
 
     def forward(self, x):
         return self.mobilenet(x)
+
+
 
 
 import torch

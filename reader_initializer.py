@@ -39,9 +39,9 @@ def initialize_data(train_folder, validation_folder, test_folder, label_file, va
         logging.info("Eredeti címkék:")
 
     logging.info(selected_data.head())
-    unique_values_in_range = selected_data['defocus_label'].unique()
-    logging.info(f"Különböző értékek száma: {unique_values_in_range}")
-    logging.info(f"Különböző értékek száma: {len(unique_values_in_range)}")
+    # unique_values_in_range = selected_data['defocus_label'].unique()
+    # logging.info(f"Különböző értékek száma: {unique_values_in_range}")
+    # logging.info(f"Különböző értékek száma: {len(unique_values_in_range)}")
     data_array = selected_data.to_numpy()
 
     # ------------------------------------------------------------------------------------
